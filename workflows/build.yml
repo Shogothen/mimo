@@ -1,0 +1,36 @@
+name: Build Mimo (iOS)
+
+# Baut bei jedem Push und auf Knopfdruck (Actions-Tab -> Run workflow).
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: Xcode-Version anzeigen
+        run: xcodebuild -version
+
+      - name: Build fuer iOS-Simulator (ohne Signing)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Mimo.xcodeproj \
+            -target Mimo \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee build.log
+
+      - name: Build-Log hochladen (auch bei Fehler)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log

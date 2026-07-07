@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 
@@ -91,6 +91,7 @@
     <div class="aura" id="moodAura"></div>
     <div class="bubble hidden" id="speechBubble"><span id="speechText"></span><i></i></div>
     <div id="petMount" class="pet-mount"></div>
+    <button id="spongeBtn" class="hidden" aria-label="Baden"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="10" rx="4" fill="#f4d06f" stroke="#c9a13f" stroke-width="1.4"/><circle cx="9" cy="12" r="1" fill="#c9a13f"/><circle cx="14" cy="14.5" r="1" fill="#c9a13f"/><circle cx="16.5" cy="11" r="1" fill="#c9a13f"/><circle cx="7" cy="6.5" r="2.4" fill="#cfe8f7" opacity=".9"/><circle cx="12" cy="5" r="1.7" fill="#cfe8f7" opacity=".8"/><circle cx="16.5" cy="6.2" r="2" fill="#cfe8f7" opacity=".85"/></svg></button>
     <div id="awayStage" class="pet-away hidden"><span class="away-icon" id="awayStageIcon">&#129517;</span><p id="awayStageText"></p></div>
     <div class="wake-hint hidden" id="wakeHint">Tippen zum Aufwecken</div>
   </section>
@@ -103,25 +104,40 @@
 
   <section class="card rings-card">
     <div class="stat-ring" data-stat="energie"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
-      <em><svg viewBox="0 0 24 24"><path d="M13 2 L5 14 h5 l-1 8 8-12 h-5 z"/></svg></em><label>Energie</label></div>
+      <em><svg viewBox="0 0 24 24"><path d="M13 3 L6 13.5 h4.5 L10 21 l7-10.5 h-4.5 z"/></svg></em><label>Energie</label></div>
     <div class="stat-ring" data-stat="laune"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
-      <em><svg viewBox="0 0 24 24"><circle cx="8.5" cy="10" r="1.6"/><circle cx="15.5" cy="10" r="1.6"/><path d="M8 14.5 q4 3.4 8 0" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg></em><label>Laune</label></div>
+      <em><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10.2" r="0.6" fill="var(--ink-soft)"/><circle cx="15" cy="10.2" r="0.6" fill="var(--ink-soft)"/><path d="M8.8 14 q3.2 2.8 6.4 0"/></svg></em><label>Laune</label></div>
     <div class="stat-ring" data-stat="saettigung"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
-      <em><svg viewBox="0 0 24 24"><path d="M7 3 v7 M10 3 v7 M8.5 3 v18 M16.5 3 c-2 0-3 2.6-3 6 0 2.4 1 3.4 2 3.8 V21 h2 V3 z"/></svg></em><label>Sättigung</label></div>
+      <em><svg viewBox="0 0 24 24"><path d="M4 13 h16 M6 13 a6 6 0 0 1 12 0 M9 17.5 h6"/></svg></em><label>Sättigung</label></div>
+    <div class="stat-ring" data-stat="hygiene"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
+      <em><svg viewBox="0 0 24 24"><path d="M12 3.5 C12 3.5 6 10.5 6 14.5 a6 6 0 0 0 12 0 C18 10.5 12 3.5 12 3.5 z"/></svg></em><label>Pflege</label></div>
     <div class="stat-ring" data-stat="bond"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
-      <em><svg viewBox="0 0 24 24"><path d="M12 20 C5 14.4 3.4 10.6 5.4 7.6 7 5.2 10.4 5.4 12 8 c1.6-2.6 5-2.8 6.6-0.4 2 3-0.4 6.8-6.6 12.4 z"/></svg></em><label>Bond</label></div>
+      <em><svg viewBox="0 0 24 24"><path d="M12 19.5 C6 14.6 4.6 11.2 6.3 8.7 7.7 6.6 10.6 6.8 12 9 c1.4-2.2 4.3-2.4 5.7-0.3 1.7 2.5 0.3 5.9-5.7 10.8 z"/></svg></em><label>Bond</label></div>
   </section>
 
-  <button class="card gift-card" id="giftCard">
-    <span class="gift-box"><svg viewBox="0 0 24 24"><path d="M4 11 h16 v9 a2 2 0 0 1 -2 2 H6 a2 2 0 0 1 -2-2 z M3 7 h18 v4 H3 z M12 7 v15 M12 7 C9 7 7 5.8 7 4.2 7 2.8 8.4 2.2 9.6 3 10.8 3.8 12 7 12 7 z M12 7 c3 0 5-1.2 5-2.8 0-1.4-1.4-2-2.6-1.2 C13.2 3.8 12 7 12 7 z"/></svg></span>
-    <span class="gift-text"><strong>Tagesgeschenk wartet</strong><small id="giftSub">Etwas Glitzerndes für dich</small></span>
-    <span class="gift-arrow">&#8250;</span>
-  </button>
-
-  <section class="card wish-card" id="wishCard">
-    <div class="card-head"><span class="section-label">Tageswunsch</span><span class="chip chip-small" id="wishReward">+30 Staub</span></div>
-    <p class="wish-text" id="wishText"></p>
-    <div class="wish-progress" id="wishProgress"></div>
+  <section class="card" id="todayCard">
+    <div class="card-head"><span class="section-label">Heute mit Mimo</span></div>
+    <button class="today-row" id="giftCard">
+      <span class="tr-icon tr-gift"><svg viewBox="0 0 24 24"><path d="M4 11 h16 v9 a2 2 0 0 1 -2 2 H6 a2 2 0 0 1 -2-2 z M3 7 h18 v4 H3 z M12 7 v15 M12 7 C9 7 7 5.8 7 4.2 7 2.8 8.4 2.2 9.6 3 10.8 3.8 12 7 12 7 z M12 7 c3 0 5-1.2 5-2.8 0-1.4-1.4-2-2.6-1.2 C13.2 3.8 12 7 12 7 z"/></svg></span>
+      <span class="tr-text"><strong>Tagesgeschenk</strong><small id="giftSub">Wartet auf dich</small></span>
+      <span class="tr-go">&#8250;</span>
+    </button>
+    <div class="today-row" id="wishCard">
+      <span class="tr-icon"><svg viewBox="0 0 24 24"><path d="M12 3 l1.8 5.4 5.4 1.8 -5.4 1.8 -1.8 5.4 -1.8 -5.4 -5.4 -1.8 5.4 -1.8 z M18.5 15 l0.9 2.6 2.6 0.9 -2.6 0.9 -0.9 2.6 -0.9 -2.6 -2.6 -0.9 2.6 -0.9 z"/></svg></span>
+      <span class="tr-text"><strong>Tageswunsch</strong><small id="wishText"></small>
+        <span class="wish-progress" id="wishProgress"></span></span>
+      <span class="chip chip-small" id="wishReward">+30 Staub</span>
+    </div>
+    <button class="today-row" id="ritualBreath">
+      <span class="tr-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.5" fill="none" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="none" stroke-width="2"/></svg></span>
+      <span class="tr-text"><strong>Eine Minute atmen</strong><small>Mimo atmet mit</small></span>
+      <span class="tr-done hidden">&#10003;</span>
+    </button>
+    <button class="today-row" id="ritualGratitude">
+      <span class="tr-icon"><svg viewBox="0 0 24 24"><path d="M12 20 C5 14.4 3.4 10.6 5.4 7.6 7 5.2 10.4 5.4 12 8 c1.6-2.6 5-2.8 6.6-0.4 2 3-0.4 6.8-6.6 12.4 z" fill="none" stroke-width="2"/></svg></span>
+      <span class="tr-text"><strong>Dankbarkeit</strong><small>Eine Sache reicht</small></span>
+      <span class="tr-done hidden">&#10003;</span>
+    </button>
   </section>
 
   <section class="card" id="expedCard">
@@ -137,21 +153,11 @@
     </div>
   </section>
 
-  <section class="card" id="ritualCard">
-    <div class="card-head"><span class="section-label">Momente mit Mimo</span></div>
-    <div class="ritual-grid">
-      <button class="ritual" id="ritualBreath"><span class="ritual-icon">○</span><strong>Eine Minute atmen</strong><small class="muted">Mimo atmet mit</small></button>
-      <button class="ritual" id="ritualGratitude"><span class="ritual-icon">♡</span><strong>Dankbarkeit</strong><small class="muted">Eine Sache reicht</small></button>
-    </div>
-  </section>
-
-  <section class="card" id="questsCard">
+  <section class="card" id="goalsCard">
     <div class="card-head"><span class="section-label">Tagesziele</span><span class="chip chip-small" id="questBonusChip">+20 XP Bonus</span></div>
     <div id="questList"></div>
-  </section>
-
-  <section class="card" id="weeklyCard">
-    <div class="card-head"><span class="section-label">Wochenziele</span><span class="chip chip-small" id="weeklyChip">+100 Staub</span></div>
+    <div class="goals-divider"></div>
+    <div class="card-head goals-week"><span class="section-label">Diese Woche</span><span class="chip chip-small" id="weeklyChip">+100 Staub</span></div>
     <div id="weeklyList"></div>
   </section>
 
@@ -363,6 +369,8 @@
   <button class="btn-danger" id="resetBtn">App zurücksetzen</button>
 </main>
 
+<div id="dockFade"></div>
+
 <!-- ===== Dock ===== -->
 <nav id="dock" class="hidden">
   <span class="dock-pill" id="dockPill"></span>
@@ -468,6 +476,16 @@
 </div>
 
 <!-- ===== Toast ===== -->
+<div id="bathOverlay" class="hidden">
+  <div class="bath-panel">
+    <h2 class="serif">Badezeit</h2>
+    <p class="muted" id="bathHint"></p>
+    <div id="bathStage"><div id="bathPetMount"></div></div>
+    <div class="bath-bar"><div id="bathProgress"></div></div>
+    <button class="btn-ghost" id="bathSkip">Später</button>
+  </div>
+</div>
+
 <div id="breathOverlay" class="hidden">
   <div class="breath-stage">
     <div class="breath-ring" id="breathRing"><div id="breathPetMount"></div></div>
@@ -517,7 +535,7 @@
 
 <div id="toast" class="hidden"><span class="toast-icon" id="toastIcon">&#10022;</span><div><strong id="toastTitle"></strong><p id="toastDetail"></p></div></div>
 
-<script src="data.js?v=6"></script>
-<script src="app.js?v=6"></script>
+<script src="data.js?v=10"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>

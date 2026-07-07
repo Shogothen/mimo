@@ -211,8 +211,8 @@ body.phase-night .aura { opacity:.4; }
 .stat-ring[data-stat="laune"] .ring-fg { stroke:var(--joy); }
 .stat-ring[data-stat="saettigung"] .ring-fg { stroke:var(--food); }
 .stat-ring[data-stat="bond"] .ring-fg { stroke:var(--accent); }
-.stat-ring em { position:absolute; left:0; right:0; top:14px; font-style:normal; }
-.stat-ring em svg { width:17px; height:17px; fill:var(--ink-soft); stroke:var(--ink-soft); }
+.stat-ring em { position:absolute; left:0; right:0; top:0; height:52px; display:grid; place-items:center; font-style:normal; pointer-events:none; }
+.stat-ring em svg { width:16px; height:16px; fill:none; stroke:var(--ink-soft); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .stat-ring label { display:block; font-size:11px; font-weight:600; color:var(--ink-soft); margin-top:4px; }
 
 .quest-row { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:14.5px; }
@@ -613,3 +613,96 @@ body.phase-night .mobile-string, body.phase-night .mobile-bar { stroke:rgba(255,
 .lk-bulb.l2 { fill:#ffb0c8; animation-delay:.5s; } .lk-bulb.l3 { fill:#b8d4ff; animation-delay:1s; }
 @keyframes lkGlow { from { opacity:.55; } to { opacity:1; } }
 body.phase-night .lk-bulb { filter: drop-shadow(0 0 5px currentColor); }
+
+/* ============ v7: Szenen-Feedback + Feed-Effekte ============ */
+.scene-float { position:absolute; top:38%; z-index:8; font-size:16px; font-weight:800;
+  text-shadow:0 1px 4px rgba(255,255,255,.7); pointer-events:none;
+  animation: sceneFloatUp 1.4s ease-out forwards; }
+@keyframes sceneFloatUp { from { opacity:0; transform:translateY(10px) scale(.8); }
+  20% { opacity:1; transform:translateY(0) scale(1.05); }
+  to { opacity:0; transform:translateY(-52px) scale(1); } }
+.fly-snack { position:absolute; left:50%; bottom:-12px; z-index:9; font-size:34px;
+  transform:translateX(-50%); pointer-events:none;
+  transition: bottom .55s cubic-bezier(.3,1.1,.5,1), transform .55s ease, opacity .2s ease .45s; }
+.fly-snack.arrive { bottom:34%; transform:translateX(-50%) scale(.4) rotate(20deg); opacity:0; }
+.feed-fx { display:block; font-size:9.5px; font-weight:700; color:var(--accent); margin-top:4px; letter-spacing:.2px; }
+
+/* ============ v8: Emotionen & Bond-Visuals ============ */
+@keyframes waveArm { 0%,100% { transform:rotate(0);} 20% { transform:rotate(-52deg);} 40% { transform:rotate(-28deg);} 60% { transform:rotate(-52deg);} 80% { transform:rotate(-20deg);} }
+.pet.soulbond .blob { filter: drop-shadow(0 0 14px rgba(255,214,150,.55)); }
+.heart-cheeks .hc { animation: hcPulse 2.6s ease-in-out infinite; transform-origin:center; }
+.heart-cheeks .hc2 { animation-delay:1.3s; }
+@keyframes hcPulse { 0%,100% { opacity:.55; transform:scale(1);} 50% { opacity:.9; transform:scale(1.12);} }
+.eye-star path { animation: starSpin 1.4s ease-in-out; transform-origin:center; }
+@keyframes starSpin { from { transform:scale(.3) rotate(-40deg);} 60% { transform:scale(1.2) rotate(8deg);} to { transform:scale(1) rotate(0);} }
+.eye-heart path { animation: heartBeat .9s ease-in-out infinite; transform-origin:center; }
+@keyframes heartBeat { 0%,100% { transform:scale(1);} 30% { transform:scale(1.15);} }
+
+/* ============ v9: Heute-Karte, Ziele, Dock-Fix ============ */
+.today-row { display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:none;
+  padding:10px 2px; border-top:1px solid rgba(122,98,112,.1); }
+.today-row:first-of-type { border-top:none; padding-top:4px; }
+.tr-icon { flex:none; width:38px; height:38px; border-radius:13px; background:rgba(158,72,107,.1);
+  display:grid; place-items:center; }
+.tr-icon svg { width:18px; height:18px; fill:var(--accent); stroke:var(--accent); stroke-width:0; }
+.tr-icon svg [fill="none"] { fill:none; }
+.tr-gift { background:linear-gradient(160deg,#f6cf6a,#eda468); animation: giftWiggle 3s ease-in-out infinite; }
+.tr-gift svg { fill:none; stroke:#fff; stroke-width:1.7; }
+.tr-text { flex:1; min-width:0; }
+.tr-text strong { display:block; font-size:14px; color:var(--page-ink, var(--ink)); }
+.tr-text small { display:block; font-size:11.5px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tr-go { font-size:22px; color:var(--accent); font-weight:700; }
+.tr-done { color:#5c7038; font-weight:800; font-size:15px; }
+.today-row.done { opacity:.55; }
+.today-row.done .tr-done { display:block !important; }
+.today-row.done .tr-go { display:none; }
+#wishCard .wish-progress { margin-top:4px; }
+#wishCard.done .tr-text small { color:#5c7038; font-weight:600; }
+#giftCard.opened { display:none; }
+.goals-divider { height:1px; background:rgba(122,98,112,.12); margin:10px 0; }
+.goals-week { margin-bottom:8px; }
+.q-icon svg { width:15px; height:15px; fill:none; stroke:var(--accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; display:block; }
+.quest-row.done .q-icon svg { stroke:#5c7038; }
+
+/* Dock: sauber + Fade-Maske gegen durchscheinenden Inhalt */
+#dockFade { position:fixed; left:0; right:0; bottom:0; height:calc(var(--dock-h) + 34px + env(safe-area-inset-bottom));
+  z-index:49; pointer-events:none;
+  background:linear-gradient(180deg, transparent, var(--sky-b) 62%); }
+body.phase-night #dockFade { background:linear-gradient(180deg, transparent, var(--sky-b) 62%); }
+#dock { box-shadow:0 6px 18px rgba(60,30,55,.16); border:1px solid rgba(255,255,255,.7); }
+body.phase-night #dock { border-color:rgba(255,255,255,.14); }
+
+/* ============ v10: Rubbeln, Baden, Dreck, Futter-Hüpfer ============ */
+#spongeBtn { position:absolute; right:14px; bottom:26%; z-index:9; width:52px; height:52px; border-radius:99px;
+  background:rgba(255,255,255,.85); box-shadow:0 4px 14px rgba(80,40,70,.25);
+  display:grid; place-items:center; animation: spongeBob 2s ease-in-out infinite; }
+#spongeBtn svg { width:30px; height:30px; }
+@keyframes spongeBob { 0%,100% { transform:translateY(0);} 50% { transform:translateY(-6px);} }
+.rub-pulse::after { content:""; position:absolute; inset:8% 18%; border-radius:50%;
+  border:3px solid rgba(255,255,255,.9); animation: rubPulse 1.2s ease-out 2; pointer-events:none; }
+@keyframes rubPulse { from { transform:scale(.7); opacity:1; } to { transform:scale(1.15); opacity:0; } }
+#petMount { touch-action:none; }
+
+#bathOverlay { position:fixed; inset:0; z-index:88; background:linear-gradient(180deg,#bfe3f2,#8fc6e8); display:grid; place-items:center; animation:fadeIn .3s ease; }
+.bath-panel { text-align:center; width:min(360px, calc(100% - 40px)); }
+.bath-panel h2 { font-size:26px; }
+#bathStage { position:relative; height:280px; margin:14px 0; display:grid; place-items:center;
+  background:radial-gradient(ellipse at 50% 85%, rgba(255,255,255,.55), transparent 60%); border-radius:30px;
+  touch-action:none; cursor:grab; }
+#bathStage::after { content:""; position:absolute; left:8%; right:8%; bottom:8%; height:56px; border-radius:50%;
+  background:linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.35)); }
+#bathPetMount { position:relative; z-index:2; }
+.foam { position:absolute; z-index:3; width:var(--fs); height:var(--fs); border-radius:99px; pointer-events:none;
+  background:radial-gradient(circle at 35% 30%, #fff, #dceefc 70%); box-shadow:0 0 0 2px rgba(255,255,255,.5);
+  animation: foamUp 1.2s ease-out forwards; }
+@keyframes foamUp { from { opacity:0; transform:scale(.4);} 25% { opacity:1; } to { opacity:0; transform:scale(1.1) translateY(-26px);} }
+.bath-bar { height:12px; border-radius:99px; background:rgba(255,255,255,.5); overflow:hidden; margin-bottom:14px; }
+#bathProgress { height:100%; width:0%; border-radius:99px; background:linear-gradient(90deg,#5fb3e8,#8fd0f5); transition:width .25s ease; }
+
+.drop-snack { position:absolute; top:-40px; z-index:9; font-size:32px; transform:translateX(-50%);
+  transition: top .5s cubic-bezier(.5,0,.8,1), opacity .25s ease, transform .3s ease; pointer-events:none; }
+.drop-snack.land { top:calc(66% + 10px); }
+.drop-snack.eaten { opacity:0; transform:translateX(-50%) scale(.3); }
+.crumb { position:absolute; top:68%; z-index:8; width:5px; height:5px; border-radius:2px; background:#b98a4f; pointer-events:none;
+  animation: crumbFly .8s ease-out forwards; }
+@keyframes crumbFly { from { opacity:1; transform:translate(0,0);} to { opacity:0; transform:translate(var(--dx), 26px);} }

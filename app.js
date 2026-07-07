@@ -25,7 +25,8 @@ const twoDaysAgoKey = () => todayKey(new Date(Date.now() - 2 * 864e5));
 const fmt = (tpl, ctx) => tpl
   .replaceAll("%N", ctx.N ?? "").replaceAll("%U", ctx.U ?? "")
   .replaceAll("%S", ctx.S ?? "").replaceAll("%L", ctx.L ?? "")
-  .replaceAll("%V", ctx.V ?? "");
+  .replaceAll("%V", ctx.V ?? "")
+  .replaceAll("%K", ctx.K ?? "");
 
 function dayPhase(d = new Date()) {
   const h = d.getHours();
@@ -45,7 +46,7 @@ function defaultState() {
     createdAt: Date.now(),
     pet: {
       name: "Mimo", base: "frech",
-      stats: { energie: 80, laune: 70, saettigung: 70, bond: 10, xp: 0, level: 1 },
+      stats: { energie: 80, laune: 70, saettigung: 70, bond: 10, hygiene: 85, xp: 0, level: 1 },
       pers: { frech: 20, lieb: 20, chaotisch: 20, vertraeumt: 20, anhaenglich: 20 },
       lastInteraction: Date.now(), lastUpdate: Date.now(),
       lastCheckInDay: null, streak: 0, sleeping: false,
@@ -67,7 +68,10 @@ function defaultState() {
     expedition: null, expeditionsDone: 0, souvenirs: [],
     gratitude: [], lastGratitudeDay: null, lastBreathDay: null, breathsDone: 0,
     streakFreezes: 0,
-    bondTierSeen: 0, destVisits: {}, weekly: null, weeklyDone: 0
+    bondTierSeen: 0, destVisits: {}, weekly: null, weeklyDone: 0,
+    care: { streichel: [], quatschDay: null, quatschCount: 0, gamesDay: null, gamesCount: 0, bathDay: null },
+    moments: [], lastGreetDay: null,
+    bathsDone: 0
   };
 }
 
@@ -91,10 +95,13 @@ try {
 
 // Migration aelterer Spielstaende
 if (state.best.sterne === 0 && state.pet.bestScore > 0) state.best.sterne = state.pet.bestScore;
+if (state.pet.stats.hygiene === undefined) state.pet.stats.hygiene = 75;
+if (state.care.bathDay === undefined) state.care.bathDay = null;
+if (state.bathsDone === undefined) state.bathsDone = 0;
 // Neue XP-Kurve: bestehendes Level bleibt mindestens erhalten
 state.pet.stats.level = Math.max(state.pet.stats.level, (function () {
   let lvl = 1, sum = 0;
-  while (state.pet.stats.xp >= sum + 100 + (lvl - 1) * 30) { sum += 100 + (lvl - 1) * 30; lvl++; }
+  while (state.pet.stats.xp >= sum + 120 + (lvl - 1) * 45) { sum += 120 + (lvl - 1) * 45; lvl++; }
   return lvl;
 })());
 
@@ -141,6 +148,7 @@ function checkBondTier() {
   if (t > (state.bondTierSeen || 0)) {
     state.bondTierSeen = t;
     pendingBondTier = t;
+    if (t === 4) captureMoment("seelen");
     state.diary.unshift({ date: Date.now(), mood: "anhaenglich", text: fmt(BOND_TIER_DIARY, ctx({ S: BOND_TIERS[t].name })) });
   }
 }
@@ -173,6 +181,8 @@ function computeMood() {
   if (s.energie < 25) return "muede";
   if (s.saettigung < 30) return "hungrig";
   if (hrs > 12) return p.pers.anhaenglich >= p.pers.frech ? "anhaenglich" : "dramatisch";
+  if (s.laune < 25) return "traurig";
+  if (s.hygiene < 35) return "stinkig";
   if (s.laune > 75 && s.energie > 50) return "gluecklich";
   if (s.laune < 40) return "gelangweilt";
   if (h >= 21 || h < 6) return "vertraeumt";
@@ -189,8 +199,9 @@ function applyDecay() {
   const hrs = (Date.now() - p.lastUpdate) / 36e5;
   if (hrs < 0.05) return;
   s.energie += p.sleeping ? hrs * 6 : -hrs * 1.5;
-  s.saettigung -= hrs * 2.5;
-  s.laune -= hrs * 1.2;
+  s.saettigung -= hrs * 3.2;
+  s.hygiene = (s.hygiene ?? 85) - hrs * 1.1;
+  s.laune -= hrs * ((s.saettigung < 30 ? 1.4 : 0) + (s.hygiene < 35 ? 1.0 : 0) + 1.2);
   s.energie = Math.max(s.energie, 10);
   s.saettigung = Math.max(s.saettigung, 10);
   s.laune = Math.max(s.laune, 15);
@@ -205,11 +216,12 @@ function clampStats() {
   const s = state.pet.stats;
   s.energie = clamp(s.energie, 0, 100); s.laune = clamp(s.laune, 0, 100);
   s.saettigung = clamp(s.saettigung, 0, 100); s.bond = clamp(s.bond, 0, 100);
+  s.hygiene = clamp(s.hygiene ?? 85, 0, 100);
 }
 function bump(trait, amt) { state.pet.pers[trait] = clamp(state.pet.pers[trait] + amt, 0, 100); }
 
 // Level n -> n+1 kostet 100 + (n-1)*30 XP; Gesamtbedarf steigt quadratisch
-function xpForNext(level) { return 100 + (level - 1) * 30; }
+function xpForNext(level) { return 120 + (level - 1) * 45; }
 function xpThreshold(level) { // Gesamt-XP, um dieses Level zu ERREICHEN
   let sum = 0;
   for (let l = 1; l < level; l++) sum += xpForNext(l);
@@ -254,7 +266,11 @@ function grantQuirk() {
   state.diary.unshift({ date: Date.now(), mood: computeMood(), text: q.diary });
 }
 
-const ctx = (extra = {}) => ({ N: state.pet.name, U: state.userName, ...extra });
+function nickname() {
+  const nn = state.talkFacts?.kosename;
+  return !nn || nn === "__name__" ? state.userName : nn;
+}
+const ctx = (extra = {}) => ({ N: state.pet.name, U: state.userName, K: nickname(), ...extra });
 
 // ---------- Engine: Diary, Reactions ----------
 function addDiary(kind, extra = {}) {
@@ -309,6 +325,8 @@ function dailyMessage() {
   }
   const oldGrat = state.gratitude.filter(g => Date.now() - g.d > 2 * 864e5);
   if (oldGrat.length) pool.push(fmt(pick(GRATITUDE_TEXTS.daily), ctx({ V: pick(oldGrat).text })));
+  const mems = recallableMoments();
+  if (mems.length) pool.push(momentRecallLine(pick(mems)));
   return fmt(pick(pool), ctx());
 }
 
@@ -321,7 +339,7 @@ function favoriteInteraction() {
 
 // ---------- Engine: Interaktionen ----------
 const EFFECTS = {
-  streicheln: { laune: 8, bond: 2, trait: "lieb", xp: 5 },
+  streicheln: { laune: 8, bond: 1, trait: "lieb", xp: 3 },
   reden:      { laune: 6, bond: 3, trait: "anhaenglich", xp: 6 },
   schlafen:   { energie: 25, trait: "vertraeumt", xp: 3 }
 };
@@ -331,24 +349,50 @@ function recordInteraction(type) {
   m[type] = (m[type] || 0) + 1;
 }
 
+// Streichel-Budget: 3 belohnte Einheiten pro Stunde (rollierend)
+function affectionRewarded() {
+  const now = Date.now();
+  state.care.streichel = (state.care.streichel || []).filter(t => now - t < 36e5);
+  if (state.care.streichel.length >= 3) return false;
+  state.care.streichel.push(now);
+  return true;
+}
+
 function interact(type) {
   if (blockIfAway()) return;
   applyDecay();
   const p = state.pet;
+  const wasTired = p.stats.energie < 50;
   p.sleeping = type === "schlafen";
   const e = EFFECTS[type];
-  p.stats.energie += e.energie || 0; p.stats.laune += e.laune || 0; p.stats.bond += e.bond || 0;
+  let rewarded = true, reactionOverride = null, xp = e.xp;
+
+  if (type === "streicheln") {
+    rewarded = affectionRewarded();
+    if (!rewarded) reactionOverride = fmt(pick(AFFECTION_FULL), ctx());
+  }
+  if (type === "schlafen" && !wasTired) {
+    rewarded = false;
+    reactionOverride = fmt(pick(NOT_TIRED), ctx());
+  }
+
+  p.stats.energie += e.energie || 0; p.stats.laune += e.laune || 0;
+  if (rewarded) p.stats.bond += e.bond || 0;
   if (e.trait) bump(e.trait, 1.5);
   clampStats();
   p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
   recordInteraction(type);
-  showReaction(genericReaction(type));
+  showReaction(reactionOverride || genericReaction(type));
   if (Math.random() < 0.25) addDiary("interaction", { type });
-  earnDust(2);
-  if (type === "streicheln") wishBump("streicheln");
-  handleLevelUp(addXP(e.xp));
+  if (type === "streicheln") {
+    wishBump("streicheln");
+    if (bondTier() >= 2 && Math.random() < 0.35) homePet?.emote("heart", 1600);
+  }
+  if (rewarded) {
+    sceneFloat(`+${xp} XP`, "#9e486b");
+    handleLevelUp(addXP(xp));
+  }
   if (type === "streicheln") questProgress("streicheln");
-  if (type === "reden") questProgress("reden");
   const h = new Date().getHours();
   if (h >= 0 && h < 4) unlockAchievement("nachteule");
   checkUnlocks(); save(); renderAll();
@@ -366,12 +410,23 @@ function feed(snackId) {
   const p = state.pet;
   p.sleeping = false;
   const snack = ALL_SNACKS.find(s => s.id === snackId);
+  const wasHungry = p.stats.saettigung < 30;
+  const tooFull = p.stats.saettigung >= 85;
   const isFav = snackId === p.favSnack;
   const discovery = isFav && !p.favDiscovered;
+
+  if (tooFull && !discovery) {
+    // Zu satt: kein Effekt, keine Belohnung, charmante Absage
+    p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
+    flyToPet(snack.icon, () => showReaction(fmt(pick(TOO_FULL), ctx())));
+    save(); renderAll();
+    return;
+  }
+
   p.stats.saettigung += snack.eff.saett;
   p.stats.laune += snack.eff.laune + (isFav ? 8 : 0);
   p.stats.energie += snack.eff.energie;
-  if (isFav) p.stats.bond += 2;
+  p.stats.bond += (snack.eff.bond || 0) + (isFav ? 1 : 0);
   clampStats();
   p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
   recordInteraction("fuettern");
@@ -381,19 +436,31 @@ function feed(snackId) {
     p.favDiscovered = true;
     text = fmt(FEED_REACTIONS.discovery, ctx({ S: snack.title }));
     addDiary("snack", { S: snack.title });
+    captureMoment("favsnack", snack.title);
+    homePet?.emote("star", 2200);
     playSound("success");
   } else if (isFav) {
+    homePet?.emote("star", 1500);
     text = fmt(pick(FEED_REACTIONS.favorite), ctx({ S: snack.title }));
-  } else if (computeMood() === "hungrig") {
+  } else if (wasHungry) {
     text = fmt(pick(FEED_REACTIONS[snackId].concat(FEED_REACTIONS.hungry)), ctx());
   } else {
     text = fmt(pick(FEED_REACTIONS[snackId]), ctx());
   }
-  showReaction(text);
+
+  let xp = 4 + (snack.eff.xp || 0);
+  if (wasHungry) { xp *= 2; text = fmt(HUNGER_BONUS_TEXT, ctx()) + " " + text; }
+
+  dropSnackAndHop(snack.icon, () => {
+    petEat();
+    spawnCrumbs();
+    showReaction(text);
+    sceneFloat(`+${snack.eff.saett} Sättigung`, "#8ca659");
+    setTimeout(() => sceneFloat(`+${xp} XP`, "#9e486b"), 350);
+  });
   if (Math.random() < 0.25) addDiary("interaction", { type: "fuettern" });
-  earnDust(2);
   wishBump("feedSnack", snackId);
-  handleLevelUp(addXP(5));
+  handleLevelUp(addXP(xp));
   questProgress("fuettern");
   checkUnlocks(); save(); renderAll();
 }
@@ -422,7 +489,10 @@ function doCheckIn(answerId) {
   const p = state.pet;
   if (p.lastCheckInDay === todayKey()) return;
   applyDecay();
-  if (p.lastCheckInDay === yesterdayKey()) p.streak += 1;
+  if (p.lastCheckInDay === yesterdayKey()) {
+    p.streak += 1;
+    if (p.streak === 7) captureMoment("streak7");
+  }
   else if (p.lastCheckInDay === twoDaysAgoKey() && state.streakFreezes > 0) {
     state.streakFreezes--;
     p.streak += 1;
@@ -447,7 +517,8 @@ function doCheckIn(answerId) {
   showReaction(fmt(text, ctx()));
   addDiary("checkin", { answer: answerId });
   playSound("success");
-  earnDust(Math.min(15 + p.streak * 2, 35));
+  earnDust(Math.min(10 + p.streak * 2, 25));
+  sceneFloat("+15 XP", "#9e486b");
   weeklyProgress("checkins");
   handleLevelUp(addXP(15));
   questProgress("checkin");
@@ -466,6 +537,10 @@ function finishMiniGame(score, mode = "sterne") {
   if (isBest) state.best[mode] = score;
   if (mode === "sterne") p.bestScore = state.best.sterne; // Legacy-Feld mitziehen
 
+  if (state.care.gamesDay !== todayKey()) { state.care.gamesDay = todayKey(); state.care.gamesCount = 0; }
+  const gameRewarded = state.care.gamesCount < 3;
+  if (gameRewarded) state.care.gamesCount++;
+
   const pool = mode === "blasen" ? GAME2_REACTIONS : GAME_REACTIONS;
   let text;
   if (isBest && score > 0) text = pool.newBest;
@@ -473,12 +548,15 @@ function finishMiniGame(score, mode = "sterne") {
   else if (score <= 5) text = pool.low;
   else if (score <= 12) text = pool.mid;
   else text = pool.high;
+  if (!gameRewarded) text += " " + GAME_FUN_ONLY;
   showReaction(fmt(text, ctx({ S: score })));
   if (Math.random() < 0.34 || score >= 15) addDiary("game", { S: score, high: score >= 15 });
-  earnDust(Math.min(score, 30));
+  if (gameRewarded) {
+    earnDust(Math.min(score, 15));
+    handleLevelUp(addXP(Math.min(4 + Math.floor(score / 2), 18)));
+  }
   weeklyProgress("spiele");
   wishBump("spielen");
-  handleLevelUp(addXP(Math.min(8 + Math.floor(score / 2), 25)));
   questProgress("spielen");
   if (mode === "blasen") questProgress("blasen");
   if (score >= 10) questProgress("minigame");
@@ -521,6 +599,35 @@ function wishBump(kind, snackId) {
   }
 }
 
+// ---------- Engine: Momente ----------
+function captureMoment(type, detail) {
+  if (!MOMENT_TYPES[type]) return;
+  if (state.moments.some(m => m.type === type && m.detail === (detail || ""))) return; // keine Duplikate
+  state.moments.unshift({ type, detail: detail || "", d: Date.now() });
+  state.moments = state.moments.slice(0, 30);
+}
+
+function recallableMoments() {
+  return state.moments.filter(m => (Date.now() - m.d) / 864e5 >= 3);
+}
+
+function momentRecallLine(m) {
+  const days = Math.max(3, Math.round((Date.now() - m.d) / 864e5));
+  return fmt(pick(MOMENT_TYPES[m.type].recall), ctx({ S: days, V: m.detail }));
+}
+
+function buildMemoryConvo(m) {
+  const days = Math.max(3, Math.round((Date.now() - m.d) / 864e5));
+  return {
+    id: "erinnerung", type: "erinnerung",
+    nodes: { start: {
+      mimo: [...MEMORY_CONVO_INTRO, fmt(pick(MOMENT_TYPES[m.type].recall), ctx({ S: days, V: m.detail }))],
+      answers: MEMORY_CONVO_ANSWERS
+    }},
+    outro: MEMORY_CONVO_OUTRO
+  };
+}
+
 // ---------- Engine: Gespraeche ----------
 function convoCond(cond) {
   const m = state.pet.memory, today = state.pet.lastCheckInDay === todayKey();
@@ -539,6 +646,10 @@ function availableConversations() {
     if (conv && convoCond(conv.cond) && !seenToday(id)) { menu.push(conv); break; }
   }
   // Bond-Gespraeche (einmalig)
+  if (!CONVERSATIONS.some(x => x.id === "deep.kosename")) CONVERSATIONS.push(NICKNAME_CONVO);
+  const mems = recallableMoments();
+  if (mems.length && state.convoSeen["erinnerung"] !== todayKey() && Math.random() < 0.6)
+    menu.push(buildMemoryConvo(pick(mems)));
   const deeps = CONVERSATIONS.filter(x => x.type === "deep").sort((a, b) => a.minBond - b.minBond);
   for (const conv of deeps) {
     if (state.pet.stats.bond >= conv.minBond && !state.convoSeen[conv.id]) { menu.push(conv); break; }
@@ -659,26 +770,35 @@ function finishConvo() {
       applyDecay();
       const p = state.pet;
       p.sleeping = false;
+      // Quatsch-Tagesbudget: 3 belohnte Plaudereien pro Tag
+      if (state.care.quatschDay !== todayKey()) { state.care.quatschDay = todayKey(); state.care.quatschCount = 0; }
+      let rewarded = true;
+      if (quatsch) {
+        rewarded = state.care.quatschCount < 3;
+        if (rewarded) state.care.quatschCount++;
+      }
       p.stats.laune = clamp(p.stats.laune + 6, 0, 100);
-      p.stats.bond = clamp(p.stats.bond + (quatsch ? 2 : 4) + chat.bondExtra, 0, 100);
+      p.stats.bond = clamp(p.stats.bond + (rewarded ? (quatsch ? 1 : 2) : 0) + chat.bondExtra, 0, 100);
       bump("anhaenglich", 1.5);
       p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
       recordInteraction("reden");
       state.convoSeen[conv.id] = todayKey();
       state.convosDone++;
       weeklyProgress("gespraeche");
-      const dust = quatsch ? 2 : 4;
-      earnDust(dust);
+      const dust = rewarded ? (conv.type === "fact" || conv.type === "deep" ? 5 : 0) : 0;
+      if (dust) earnDust(dust);
       wishBump("reden");
-      const diaryChance = { fact: 1, deep: 1, context: 0.6, story: 0.5, quatsch: 0.2 }[conv.type] || 0.3;
+      const diaryChance = { fact: 1, deep: 1, context: 0.6, story: 0.5, quatsch: 0.2, erinnerung: 0 }[conv.type] || 0.3;
       if (Math.random() < diaryChance)
         state.diary.unshift({ date: Date.now(), mood: computeMood(), text: fmt(CONVO_DIARY[conv.type], ctx()) });
       const rw = document.createElement("div");
       rw.className = "msg-reward";
-      rw.innerHTML = `<span class="chip chip-small">+${quatsch ? 4 : 8} XP</span><span class="chip chip-dust chip-small">+${dust} Staub</span><span class="chip chip-small" style="color:#e56b6b;background:#e56b6b22">Bond +${(quatsch ? 2 : 4) + chat.bondExtra}</span>`;
+      rw.innerHTML = rewarded
+        ? `<span class="chip chip-small">+${quatsch ? 4 : 8} XP</span>${dust ? `<span class="chip chip-dust chip-small">+${dust} Staub</span>` : ""}<span class="chip chip-small" style="color:#e56b6b;background:#e56b6b22">Bond +${(quatsch ? 2 : 4) + chat.bondExtra}</span>`
+        : `<span class="chip chip-small">${fmt(pick(QUATSCH_FULL), ctx())}</span>`;
       $("#chatScroll").appendChild(rw);
       chatScrollDown();
-      handleLevelUp(addXP(quatsch ? 4 : 8));
+      if (rewarded) handleLevelUp(addXP(quatsch ? 4 : 8));
       questProgress("reden");
       checkUnlocks(); save();
     }
@@ -714,7 +834,7 @@ function startExpedition(tierId) {
 
 function destMastery(destId) {
   const v = state.destVisits[destId] || 0;
-  return v >= 6 ? 3 : v >= 3 ? 2 : v >= 1 ? 1 : 0;
+  return v >= 12 ? 3 : v >= 5 ? 2 : v >= 1 ? 1 : 0;
 }
 
 function rollSouvenir(tier, destId) {
@@ -748,17 +868,23 @@ function checkExpeditionReturn() {
   const souvenir = rollSouvenir(tier, dest.id);
   let souvenirNew = false, bonusDust = 0;
   if (souvenir) {
-    if (state.souvenirs.includes(souvenir.id)) bonusDust = Math.ceil(dust / 2);
-    else { state.souvenirs.push(souvenir.id); souvenirNew = true; }
+    if (state.souvenirs.includes(souvenir.id)) bonusDust = Math.ceil(dust / 3);
+    else {
+      state.souvenirs.push(souvenir.id);
+      souvenirNew = true;
+      if (souvenir.rar === "episch" || souvenir.rar === "legendaer") captureMoment("fund", souvenir.title);
+    }
   }
   state.expedition = null;
   state.expeditionsDone++;
+  if (tier.id === "lang" && !state.moments.some(m => m.type === "reise")) captureMoment("reise");
   weeklyProgress("expeds");
   earnDust(dust + bonusDust);
   state.pet.stats.laune = clamp(state.pet.stats.laune + 10, 0, 100);
-  state.pet.stats.bond = clamp(state.pet.stats.bond + 3, 0, 100);
+  state.pet.stats.hygiene = clamp(state.pet.stats.hygiene - (tier.id === "lang" ? 30 : tier.id === "mittel" ? 22 : 14), 0, 100);
+  state.pet.stats.bond = clamp(state.pet.stats.bond + 2, 0, 100);
   state.pet.lastInteraction = Date.now(); state.pet.lastUpdate = Date.now();
-  handleLevelUp(addXP(tier.id === "lang" ? 20 : tier.id === "mittel" ? 12 : 6));
+  handleLevelUp(addXP(tier.id === "lang" ? 50 : tier.id === "mittel" ? 25 : 10));
   state.diary.unshift({ date: Date.now(), mood: "gluecklich", text: fmt(EXPED_TEXTS.diary, ctx({ S: dest.title })) });
   let storyPool = [...dest.stories];
   const ms = EXPED_MASTER_STORIES[dest.id] || {};
@@ -824,7 +950,7 @@ function finishBreath(skipped) {
   if (skipped && breath.cycle < 3) { renderAll(); return; } // zu frueh abgebrochen: keine Belohnung
   applyDecay();
   state.pet.stats.laune = clamp(state.pet.stats.laune + 8, 0, 100);
-  state.pet.stats.bond = clamp(state.pet.stats.bond + 2, 0, 100);
+  state.pet.stats.bond = clamp(state.pet.stats.bond + 1, 0, 100);
   if (state.lastBreathDay !== todayKey()) { earnDust(5); state.lastBreathDay = todayKey(); }
   state.breathsDone++;
   weeklyProgress("momente");
@@ -837,7 +963,7 @@ function saveGratitude(text) {
   state.gratitude.unshift({ d: Date.now(), text });
   state.gratitude = state.gratitude.slice(0, 40);
   applyDecay();
-  state.pet.stats.bond = clamp(state.pet.stats.bond + 3, 0, 100);
+  state.pet.stats.bond = clamp(state.pet.stats.bond + 2, 0, 100);
   state.pet.stats.laune = clamp(state.pet.stats.laune + 5, 0, 100);
   if (state.lastGratitudeDay !== todayKey()) { earnDust(8); state.lastGratitudeDay = todayKey(); }
   weeklyProgress("momente");
@@ -1019,7 +1145,17 @@ function checkUnlocks() {
     "level.20": p.stats.level >= 20,
     "woche.1": state.weeklyDone >= 1,
     "meister.1": Object.values(state.destVisits).some(v => v >= 6),
-    "gespraech.15": state.convosDone >= 15
+    "gespraech.15": state.convosDone >= 15,
+    "level.25": p.stats.level >= 25,
+    "level.30": p.stats.level >= 30,
+    "exped.50": state.expeditionsDone >= 50,
+    "gespraech.100": state.convosDone >= 100,
+    "streak.30": p.streak >= 30,
+    "staub.5000": p.dustEarned >= 5000,
+    "bad.20": (state.bathsDone || 0) >= 20,
+    "woche.10": state.weeklyDone >= 10,
+    "facts.alle": CONVERSATIONS.filter(x => x.type === "fact").every(x => state.talkFacts[x.factKey]),
+    "album.30": state.souvenirs.length >= SOUVENIRS.length
   };
   for (const id of Object.keys(cond)) if (cond[id]) unlockAchievement(id);
   checkBondTier();
@@ -1091,7 +1227,48 @@ function createPet(mount, size, opts = {}) {
         <ellipse cx="70" cy="92" rx="10" ry="7" fill="#ef8d5c" opacity="0.55" transform="rotate(-18 70 92)"/>
         <ellipse cx="196" cy="86" rx="8" ry="6" fill="#ef8d5c" opacity="0.5" transform="rotate(14 196 86)"/>
       </g>
+      <g class="dirt hidden">
+        <ellipse class="d1" cx="86" cy="150" rx="13" ry="8" fill="#8a7355" opacity="0.5" transform="rotate(-12 86 150)"/>
+        <ellipse class="d2" cx="176" cy="128" rx="10" ry="7" fill="#7d6a4e" opacity="0.45" transform="rotate(15 176 128)"/>
+        <ellipse class="d3" cx="132" cy="176" rx="12" ry="7" fill="#8a7355" opacity="0.5" transform="rotate(5 132 176)"/>
+      </g>
+      <g class="tuft-baby hidden">
+        <path d="M 126 34 Q 118 16 132 12 Q 128 22 138 24 Q 130 28 130 36" fill="#f79a67"/>
+      </g>
+      <g class="tuft-teen hidden">
+        <path d="M 124 32 Q 116 8 134 4 Q 148 2 146 14 Q 138 10 134 16 Q 132 24 130 34" fill="#f79a67"/>
+      </g>
+      <g class="tail hidden" transform="translate(222 196)">
+        <path d="M 0 0 Q 26 -6 30 -30 Q 33 -48 20 -52 Q 28 -38 18 -28 Q 10 -20 2 -16 Z" fill="#f2916b"/>
+        <circle cx="24" cy="-46" r="9" fill="#f9a873"/>
+      </g>
+      <g class="heart-cheeks hidden">
+        <path class="hc" d="M 66 140 c -3 -4 -9 -3 -9 2 c 0 4 5 7 9 10 c 4 -3 9 -6 9 -10 c 0 -5 -6 -6 -9 -2 z" fill="#e56b6b" opacity="0.75"/>
+        <path class="hc hc2" d="M 194 140 c -3 -4 -9 -3 -9 2 c 0 4 5 7 9 10 c 4 -3 9 -6 9 -10 c 0 -5 -6 -6 -9 -2 z" fill="#e56b6b" opacity="0.75"/>
+      </g>
+      <g class="brows hidden">
+        <path class="brow-sad hidden" d="M 86 92 Q 98 86 108 94" stroke="#3a2531" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <path class="brow-sad hidden" d="M 174 92 Q 162 86 152 94" stroke="#3a2531" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <path class="brow-up hidden" d="M 86 88 Q 98 82 110 88" stroke="#3a2531" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <path class="brow-up hidden" d="M 174 88 Q 162 82 150 88" stroke="#3a2531" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      </g>
       <g class="eyes">
+        <g class="eye-star hidden">
+          <path d="M 98 100 l 3.6 7.8 8.6 0.9 -6.4 5.8 1.8 8.4 -7.6 -4.3 -7.6 4.3 1.8 -8.4 -6.4 -5.8 8.6 -0.9 z" fill="#f2b035"/>
+          <path d="M 162 100 l 3.6 7.8 8.6 0.9 -6.4 5.8 1.8 8.4 -7.6 -4.3 -7.6 4.3 1.8 -8.4 -6.4 -5.8 8.6 -0.9 z" fill="#f2b035"/>
+        </g>
+        <g class="eye-heart hidden">
+          <path d="M 98 104 c -5 -7 -15 -5 -15 3 c 0 7 8 12 15 17 c 7 -5 15 -10 15 -17 c 0 -8 -10 -10 -15 -3 z" fill="#e56b6b"/>
+          <path d="M 162 104 c -5 -7 -15 -5 -15 3 c 0 7 8 12 15 17 c 7 -5 15 -10 15 -17 c 0 -8 -10 -10 -15 -3 z" fill="#e56b6b"/>
+        </g>
+        <g class="eye-teary hidden">
+          <ellipse cx="98" cy="112" rx="11" ry="12" fill="#3a2531"/>
+          <ellipse cx="98" cy="116" rx="7" ry="5" fill="#8fb8e8" opacity="0.85"/>
+          <circle cx="94" cy="106" r="4" fill="#fff"/>
+          <ellipse cx="162" cy="112" rx="11" ry="12" fill="#3a2531"/>
+          <ellipse cx="162" cy="116" rx="7" ry="5" fill="#8fb8e8" opacity="0.85"/>
+          <circle cx="158" cy="106" r="4" fill="#fff"/>
+        </g>
         <g class="eye-normal">
           <ellipse cx="98" cy="112" rx="11.5" ry="13.5" fill="#3a2531"/>
           <circle cx="94" cy="106" r="4.6" fill="#fff"/><circle cx="102" cy="117" r="2.1" fill="#fff" opacity="0.8"/>
@@ -1116,6 +1293,10 @@ function createPet(mount, size, opts = {}) {
           <path d="M 86 112 Q 98 121 110 112" stroke="#3a2531" stroke-width="5.5" fill="none" stroke-linecap="round"/>
           <path d="M 150 112 Q 162 121 174 112" stroke="#3a2531" stroke-width="5.5" fill="none" stroke-linecap="round"/>
         </g>
+      </g>
+      <g class="bond-sparkle hidden">
+        <circle cx="104" cy="119" r="1.8" fill="#fff" opacity="0.95"/>
+        <circle cx="168" cy="119" r="1.8" fill="#fff" opacity="0.95"/>
       </g>
       <g class="mouths">
         <path class="m-smile" d="M 112 142 Q 130 158 148 142" stroke="#6e3a3e" stroke-width="5" fill="none" stroke-linecap="round"/>
@@ -1186,23 +1367,59 @@ function createPet(mount, size, opts = {}) {
     animated: !opts.static,
     blinking: false,
     mood: "gluecklich", sleeping: false,
+    emoteType: null, emoteUntil: 0,
+    emote(type, ms = 1600) {
+      this.emoteType = type;
+      this.emoteUntil = Date.now() + ms;
+      this.update(this.mood, this.sleeping, currentHat());
+      setTimeout(() => {
+        if (Date.now() >= this.emoteUntil) { this.emoteType = null; this.update(this.mood, this.sleeping, currentHat()); }
+      }, ms + 40);
+    },
     update(mood, sleeping, hat) {
       this.mood = mood; this.sleeping = sleeping;
+      const emote = this.emoteType && Date.now() < this.emoteUntil ? this.emoteType : null;
       svg.classList.toggle("sleeping", sleeping);
       svg.classList.toggle("happy", mood === "gluecklich" && !sleeping);
       svg.querySelector(".zzz").classList.toggle("hidden", !sleeping);
-      const eyes = { normal: 0, big: 0, lid: 0, sly: 0, closed: 0 };
+      const eyes = { normal: 0, big: 0, lid: 0, sly: 0, closed: 0, star: 0, heart: 0, teary: 0 };
       const mouth = { smile: 0, small: 0, open: 0, flat: 0, sleep: 0 };
-      if (sleeping || this.blinking) { eyes.closed = 1; }
+      let brow = null; // null | "sad" | "up"
+      if (emote === "star") { eyes.star = 1; mouth.open = 1; brow = "up"; }
+      else if (emote === "heart") { eyes.heart = 1; mouth.smile = 1; }
+      else if (sleeping || this.blinking) { eyes.closed = 1; }
+      else if (mood === "traurig") { eyes.teary = 1; brow = "sad"; }
       else if (mood === "muede" || mood === "vertraeumt") eyes.lid = 1;
       else if (mood === "frech") eyes.sly = 1;
-      else if (mood === "dramatisch") eyes.big = 1;
+      else if (mood === "dramatisch") { eyes.big = 1; brow = "up"; }
       else eyes.normal = 1;
-      if (sleeping) mouth.sleep = 1;
-      else if (mood === "gluecklich" || mood === "anhaenglich") mouth.smile = 1;
-      else if (mood === "hungrig" || mood === "dramatisch") mouth.open = 1;
-      else if (mood === "muede" || mood === "gelangweilt") mouth.flat = 1;
-      else mouth.small = 1;
+      if (!emote) {
+        if (sleeping) mouth.sleep = 1;
+        else if (mood === "traurig") mouth.flat = 1;
+        else if (mood === "gluecklich" || mood === "anhaenglich") mouth.smile = 1;
+        else if (mood === "hungrig" || mood === "dramatisch") mouth.open = 1;
+        else if (mood === "muede" || mood === "gelangweilt") mouth.flat = 1;
+        else mouth.small = 1;
+      }
+      // Brauen
+      const browsG = svg.querySelector(".brows");
+      browsG.classList.toggle("hidden", !brow);
+      svg.querySelectorAll(".brow-sad").forEach(el => el.classList.toggle("hidden", brow !== "sad"));
+      svg.querySelectorAll(".brow-up").forEach(el => el.classList.toggle("hidden", brow !== "up"));
+      // Schmutz nach Hygiene-Stand
+      const hyg = state?.pet?.stats?.hygiene ?? 100;
+      const dirtG = svg.querySelector(".dirt");
+      if (dirtG) {
+        dirtG.classList.toggle("hidden", hyg >= 75);
+        dirtG.querySelector(".d1").style.display = hyg < 75 ? "" : "none";
+        dirtG.querySelector(".d2").style.display = hyg < 55 ? "" : "none";
+        dirtG.querySelector(".d3").style.display = hyg < 35 ? "" : "none";
+      }
+      // Bond-Visuals: 2. Glanz ab Stufe 2, Herz-Wangen ab 3, Schimmer ab 4
+      const bt = typeof bondTier === "function" ? bondTier() : 0;
+      svg.querySelector(".bond-sparkle").classList.toggle("hidden", bt < 2 || sleeping || eyes.star || eyes.heart || eyes.teary || eyes.closed);
+      svg.querySelector(".heart-cheeks").classList.toggle("hidden", bt < 3);
+      svg.classList.toggle("soulbond", bt >= 4);
       for (const k of Object.keys(eyes)) svg.querySelector(`.eye-${k}`).classList.toggle("hidden", !eyes[k]);
       for (const k of Object.keys(mouth)) svg.querySelector(`.m-${k}`).classList.toggle("hidden", !mouth[k]);
       for (const h of HATS) {
@@ -1229,7 +1446,7 @@ function createPet(mount, size, opts = {}) {
       const cfg = {
         1: { body: 0.84, eyes: 1.16, ears: 0.88, spots: false },
         2: { body: 1.0,  eyes: 1.0,  ears: 1.0,  spots: false },
-        3: { body: 1.1,  eyes: 0.94, ears: 1.06, spots: true }
+        3: { body: 1.1,  eyes: 0.94, ears: 1.18, spots: true }
       }[stage] || { body: 1, eyes: 1, ears: 1, spots: false };
       svg.querySelector(".stagewrap").setAttribute("transform",
         `translate(130 234) scale(${cfg.body}) translate(-130 -234)`);
@@ -1238,6 +1455,9 @@ function createPet(mount, size, opts = {}) {
       svg.querySelector(".earswrap").setAttribute("transform",
         `translate(130 58) scale(${cfg.ears}) translate(-130 -58)`);
       svg.querySelector(".spots").classList.toggle("hidden", !cfg.spots);
+      svg.querySelector(".tuft-baby").classList.toggle("hidden", stage !== 1);
+      svg.querySelector(".tuft-teen").classList.toggle("hidden", stage !== 2);
+      svg.querySelector(".tail").classList.toggle("hidden", stage !== 3);
     }
   };
   inst.blob.setAttribute("d", blobPath(130, 128, 92, 86, inst.phase));
@@ -1249,6 +1469,17 @@ function createPet(mount, size, opts = {}) {
       inst.blinking = true; inst.update(inst.mood, inst.sleeping, currentHat());
       setTimeout(() => { inst.blinking = false; inst.update(inst.mood, inst.sleeping, currentHat()); }, 150);
     }, 3400 + Math.random() * 900);
+    // Gelegentliches Winken bei guter Laune
+    setInterval(() => {
+      if (inst.sleeping || Math.random() > 0.45) return;
+      if (inst.mood !== "gluecklich" && inst.mood !== "anhaenglich") return;
+      const arm = svg.querySelector(".armR");
+      if (!arm) return;
+      arm.style.transformOrigin = "218px 172px";
+      arm.style.animation = "waveArm 1.1s ease-in-out";
+      setTimeout(() => { arm.style.animation = ""; }, 1200);
+    }, 24000 + Math.random() * 16000);
+
     // Blick wandert
     setInterval(() => {
       if (inst.sleeping) return;
@@ -1353,6 +1584,7 @@ function renderAll() {
   $("#streakChip").classList.toggle("hidden", p.streak < 2);
   $("#streakChip").innerHTML = `&#128293; ${p.streak} Tage`;
   const lvlBase = xpThreshold(p.stats.level);
+  setRing($(".stat-ring[data-stat=hygiene] .ring-fg"), p.stats.hygiene / 100, 21);
   setRing($("#xpRing"), (p.stats.xp - lvlBase) / xpForNext(p.stats.level), 18);
   $("#moodAura").style.background = MOODS[mood].hex;
   const stage = petStage();
@@ -1382,6 +1614,9 @@ function renderAll() {
     $("#expedIdleText").textContent = fmt("%N steht bereit. Der unsichtbare Koffer ist immer gepackt.", ctx());
   }
 
+  // Schwamm bei Bedarf
+  $("#spongeBtn").classList.toggle("hidden", !bathNeeded() || !!state.expedition);
+
   // Rituale
   $("#ritualBreath").classList.toggle("done", state.lastBreathDay === todayKey());
   $("#ritualGratitude").classList.toggle("done", state.lastGratitudeDay === todayKey());
@@ -1397,7 +1632,7 @@ function renderAll() {
   ensureWish();
   const w = state.wish;
   $("#wishCard").classList.toggle("done", w.done);
-  $("#wishText").textContent = w.done ? "Erfüllt. " + fmt("%N ist sehr zufrieden mit dir.", ctx()) : fmt(w.text, ctx());
+  $("#wishText").textContent = w.done ? fmt("Erfüllt. %N ist sehr zufrieden mit dir.", ctx()) : fmt(w.text, ctx());
   $("#wishReward").textContent = w.done ? "Erledigt" : "+30 Staub";
   $("#wishProgress").innerHTML = w.target > 1
     ? Array.from({ length: w.target }, (_, i) => `<span class="wp-dot ${i < w.progress ? "on" : ""}"></span>`).join("")
@@ -1417,7 +1652,7 @@ function renderAll() {
   $("#weeklyList").innerHTML = wq.list.map(item => {
     const def = WEEKLY_TYPES[item.type], done = item.progress >= def.target;
     return `<div class="quest-row ${done ? "done" : ""}">
-      <span class="q-icon">${done ? "\u2713" : def.icon}</span>${def.title}
+      <span class="q-icon">${done ? ICONS.check : qIcon(def)}</span>${def.title}
       <span class="q-progress">${Math.min(item.progress, def.target)}/${def.target}</span></div>`;
   }).join("");
 
@@ -1429,7 +1664,7 @@ function renderAll() {
   $("#questList").innerHTML = q.list.map(item => {
     const def = QUEST_TYPES[item.type], done = item.progress >= def.target;
     return `<div class="quest-row ${done ? "done" : ""}">
-      <span class="q-icon">${done ? "\u2713" : def.icon}</span>${def.title}
+      <span class="q-icon">${done ? ICONS.check : qIcon(def)}</span>${def.title}
       ${def.target > 1 ? `<span class="q-progress">${item.progress}/${def.target}</span>` : ""}</div>`;
   }).join("");
   $("#checkinBtn").classList.toggle("done", p.lastCheckInDay === todayKey());
@@ -1491,6 +1726,26 @@ function renderRoom(mood) {
 
   renderShop();
 }
+
+const ICONS = (() => {
+  const w = (p) => `<svg viewBox="0 0 24 24">${p}</svg>`;
+  return {
+    check:   w('<path d="M5 12.5 L10 17.5 L19 7"/>'),
+    flower:  w('<circle cx="12" cy="12" r="2.4"/><circle cx="12" cy="6.4" r="2.6"/><circle cx="17.2" cy="10.2" r="2.6"/><circle cx="15.2" cy="16.4" r="2.6"/><circle cx="8.8" cy="16.4" r="2.6"/><circle cx="6.8" cy="10.2" r="2.6"/>'),
+    bowl:    w('<path d="M4 13 h16 M6 13 a6 6 0 0 1 12 0 M9 17.5 h6"/>'),
+    star:    w('<path d="M12 3.5 l2.4 5.4 5.6 0.6 -4.2 3.9 1.2 5.6 -5 -3 -5 3 1.2 -5.6 -4.2 -3.9 5.6 -0.6 z"/>'),
+    bubble:  w('<path d="M4.5 6.5 a3 3 0 0 1 3-3 h9 a3 3 0 0 1 3 3 v6 a3 3 0 0 1 -3 3 H10 l-4 4 v-4 h-1.5 a3 3 0 0 1 -3-3 z"/>'),
+    bubble2: w('<circle cx="12" cy="12" r="8"/><path d="M8.5 8.5 a5 5 0 0 1 3.2 -1.6"/>'),
+    trophy:  w('<path d="M7 4 h10 v5 a5 5 0 0 1 -10 0 z M7 6 H4.5 a3 3 0 0 0 3 4 M17 6 h2.5 a3 3 0 0 1 -3 4 M12 14 v3 M8.5 20 h7 M10 17 h4 v3 h-4 z"/>'),
+    gift:    w('<path d="M4.5 11 h15 v8.5 a1.5 1.5 0 0 1 -1.5 1.5 H6 a1.5 1.5 0 0 1 -1.5 -1.5 z M3.5 7.5 h17 V11 h-17 z M12 7.5 V21 M12 7.5 C9.5 7.5 8 6.5 8 5 8 3.8 9.2 3.3 10.2 4 c1 0.7 1.8 3.5 1.8 3.5 z M12 7.5 c2.5 0 4 -1 4 -2.5 0 -1.2 -1.2 -1.7 -2.2 -1 -1 0.7 -1.8 3.5 -1.8 3.5 z"/>'),
+    sparkle: w('<path d="M12 3.5 l1.7 5.1 5.1 1.7 -5.1 1.7 -1.7 5.1 -1.7 -5.1 -5.1 -1.7 5.1 -1.7 z M18.5 15.5 l0.8 2.4 2.4 0.8 -2.4 0.8 -0.8 2.4 -0.8 -2.4 -2.4 -0.8 2.4 -0.8 z"/>'),
+    compass: w('<circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5 l-2.2 5 -5 2.2 2.2 -5 z"/>'),
+    breath:  w('<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3"/>'),
+    heart:   w('<path d="M12 19.5 C6 14.6 4.6 11.2 6.3 8.7 7.7 6.6 10.6 6.8 12 9 c1.4-2.2 4.3-2.4 5.7-0.3 1.7 2.5 0.3 5.9-5.7 10.8 z"/>'),
+    drop:    w('<path d="M12 3.5 C12 3.5 6 10.5 6 14.5 a6 6 0 0 0 12 0 C18 10.5 12 3.5 12 3.5 z"/>')
+  };
+})();
+const qIcon = (def) => ICONS[def.ico] || def.icon || "";
 
 const DUST_ICO = '<svg viewBox="0 0 24 24" class="dust-ico"><path d="M12 2.8 l2.5 5.6 6.1 0.6 -4.6 4.1 1.3 6 -5.3-3.1 -5.3 3.1 1.3-6 -4.6-4.1 6.1-0.6 z"/></svg>';
 
@@ -1609,6 +1864,220 @@ setInterval(() => {
   updateExpedProgress();
   if (Date.now() >= state.expedition.end) { checkExpeditionReturn(); renderAll(); showReturn(); }
 }, 1000);
+
+// ---------- Rubbel-Gesten: Streicheln & Baden ----------
+const rub = { active: false, x: 0, y: 0, sum: 0, heartsAcc: 0, mode: "pet" };
+
+function rubStart(x, y) { rub.active = true; rub.x = x; rub.y = y; }
+function rubEnd() { rub.active = false; }
+
+function rubMove(x, y) {
+  if (!rub.active) return;
+  const d = Math.hypot(x - rub.x, y - rub.y);
+  rub.x = x; rub.y = y;
+  if (d <= 0 || d > 120) return; // Spruenge ignorieren
+  if (rub.mode === "pet") rubPetProgress(d);
+  else bathProgress(d);
+}
+
+function rubPetProgress(d) {
+  if (expeditionActive() || state.pet.sleeping) return;
+  rub.sum += d; rub.heartsAcc += d;
+  if (rub.heartsAcc >= 130) { rub.heartsAcc = 0; spawnHearts($("#petMount")); if (navigator.vibrate) navigator.vibrate(8); }
+  if (rub.sum >= 340) {
+    rub.sum = 0;
+    homePet?.squish();
+    applyDecay();
+    const p = state.pet;
+    p.stats.laune = clamp(p.stats.laune + 6, 0, 100);
+    const rewarded = affectionRewarded();
+    if (rewarded) {
+      p.stats.bond = clamp(p.stats.bond + 1, 0, 100);
+      sceneFloat("+3 XP", "#9e486b");
+      handleLevelUp(addXP(3));
+      showReaction(fmt(pick(RUB_REACTIONS), ctx()));
+    } else {
+      showReaction(fmt(pick(AFFECTION_FULL), ctx()));
+    }
+    bump("lieb", 1.5);
+    p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
+    recordInteraction("streicheln");
+    wishBump("streicheln");
+    questProgress("streicheln");
+    if (bondTier() >= 2 && Math.random() < 0.35) homePet?.emote("heart", 1600);
+    checkUnlocks(); save(); renderAll();
+  }
+}
+
+// ---------- Baden ----------
+const bath = { pet: null, spots: 3, rubbed: 0, finished: false };
+
+function bathNeeded() { return state.pet.stats.hygiene < 70; }
+
+function startBath() {
+  if (expeditionActive()) { blockIfAway(); return; }
+  $("#bathOverlay").classList.remove("hidden");
+  const mount = $("#bathPetMount"); mount.innerHTML = "";
+  bath.pet = createPet(mount, 170, { static: true });
+  bath.pet.update("frech", false, "none");
+  const svg = mount.querySelector("svg");
+  svg.querySelector(".dirt").classList.remove("hidden");
+  svg.querySelectorAll(".dirt ellipse").forEach(el => { el.style.display = ""; });
+  bath.spots = 3; bath.rubbed = 0; bath.finished = false;
+  rub.mode = "wash"; rub.sum = 0;
+  $("#bathHint").textContent = fmt(HYGIENE_TEXTS.bathStart, ctx());
+  $("#bathProgress").style.width = "0%";
+  playSound("open");
+}
+
+function bathProgress(d) {
+  if (bath.finished || $("#bathOverlay").classList.contains("hidden")) return;
+  bath.rubbed += d;
+  if (Math.random() < 0.4) spawnFoam();
+  const per = 480;
+  const cleaned = Math.min(3, Math.floor(bath.rubbed / per));
+  const svg = $("#bathPetMount svg");
+  if (svg) {
+    if (cleaned >= 1) svg.querySelector(".dirt .d1").style.display = "none";
+    if (cleaned >= 2) svg.querySelector(".dirt .d2").style.display = "none";
+    if (cleaned >= 3) svg.querySelector(".dirt .d3").style.display = "none";
+  }
+  $("#bathProgress").style.width = Math.min(100, bath.rubbed / (per * 3) * 100) + "%";
+  if (navigator.vibrate && Math.random() < 0.2) navigator.vibrate(6);
+  if (bath.rubbed >= per * 3) finishBath();
+}
+
+function spawnFoam() {
+  const stage = $("#bathStage");
+  if (!stage) return;
+  const f = document.createElement("span");
+  f.className = "foam";
+  f.style.left = (18 + Math.random() * 64) + "%";
+  f.style.top = (24 + Math.random() * 46) + "%";
+  f.style.setProperty("--fs", (10 + Math.random() * 18) + "px");
+  stage.appendChild(f);
+  setTimeout(() => f.remove(), 1300);
+}
+
+function finishBath() {
+  if (bath.finished) return;
+  bath.finished = true;
+  rub.mode = "pet";
+  applyDecay();
+  const p = state.pet;
+  p.stats.hygiene = 100;
+  p.stats.laune = clamp(p.stats.laune + 10, 0, 100);
+  state.bathsDone++;
+  const rewarded = state.care.bathDay !== todayKey();
+  if (rewarded) {
+    state.care.bathDay = todayKey();
+    earnDust(6);
+    handleLevelUp(addXP(12));
+  }
+  p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
+  questProgress("waschen");
+  bath.pet?.emote("star", 1800);
+  setTimeout(() => {
+    $("#bathOverlay").classList.add("hidden");
+    showReaction(fmt(pick(HYGIENE_TEXTS.bathDone), ctx()));
+    if (rewarded) { sceneFloat("+12 XP", "#9e486b"); }
+    checkUnlocks(); save(); renderAll();
+  }, 900);
+  playSound("success");
+}
+
+function cancelBath() {
+  rub.mode = "pet";
+  $("#bathOverlay").classList.add("hidden");
+  showReaction(fmt(HYGIENE_TEXTS.bathSkip, ctx()));
+  renderAll();
+}
+
+// ---------- Szenen-Feedback ----------
+function scrollToScene() {
+  try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); }
+}
+
+function sceneFloat(text, color) {
+  const stage = $(".stage");
+  if (!stage) return;
+  const el = document.createElement("div");
+  el.className = "scene-float";
+  el.textContent = text;
+  el.style.color = color || "#9e486b";
+  el.style.left = (38 + Math.random() * 24) + "%";
+  stage.appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
+
+function flyToPet(icon, done) {
+  scrollToScene();
+  const stage = $(".stage");
+  if (!stage) { done && done(); return; }
+  const el = document.createElement("div");
+  el.className = "fly-snack";
+  el.textContent = icon;
+  stage.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("arrive")));
+  setTimeout(() => { el.remove(); done && done(); }, 620);
+}
+
+function dropSnackAndHop(icon, done) {
+  scrollToScene();
+  const stage = $(".stage"), mount = $("#petMount");
+  if (!stage || !mount) { done && done(); return; }
+  const side = Math.random() < 0.5 ? -1 : 1;
+  const offset = side * (60 + Math.random() * 40); // px neben Mimo
+  const el = document.createElement("div");
+  el.className = "drop-snack";
+  el.textContent = icon;
+  el.style.left = `calc(50% + ${offset}px)`;
+  stage.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("land")));
+  // Mimo huepft zum Snack
+  setTimeout(() => {
+    mount.style.transition = "transform .5s cubic-bezier(.4,1.3,.5,1)";
+    mount.style.transform = `translateX(${offset}px)`;
+    homePet?.squish();
+  }, 480);
+  // Essen + zurueck
+  setTimeout(() => { el.classList.add("eaten"); done && done(); }, 1050);
+  setTimeout(() => {
+    el.remove();
+    mount.style.transform = "translateX(0)";
+    setTimeout(() => { mount.style.transition = ""; }, 550);
+  }, 1900);
+}
+
+function spawnCrumbs() {
+  const stage = $(".stage");
+  if (!stage) return;
+  for (let i = 0; i < 6; i++) {
+    const cr = document.createElement("span");
+    cr.className = "crumb";
+    cr.style.left = `calc(50% + ${(Math.random() * 80 - 40)}px)`;
+    cr.style.setProperty("--dx", (Math.random() * 60 - 30) + "px");
+    stage.appendChild(cr);
+    setTimeout(() => cr.remove(), 900);
+  }
+}
+
+function petEat() {
+  if (!homePet) return;
+  homePet.squish();
+  const svg = homePet.svg;
+  const open = svg.querySelector(".m-open");
+  const others = ["smile", "small", "flat", "sleep"].map(k => svg.querySelector(".m-" + k));
+  let i = 0;
+  const chew = setInterval(() => {
+    const show = i % 2 === 0;
+    open.classList.toggle("hidden", !show);
+    others.forEach(o => o.classList.add("hidden"));
+    if (!show) svg.querySelector(".m-smile").classList.remove("hidden");
+    if (++i >= 6) { clearInterval(chew); renderAll(); }
+  }, 160);
+  playSound("catch");
+}
 
 // ---------- UI: Toast + Level-Up ----------
 let toastTimer = null;
@@ -1739,14 +2208,20 @@ function buildSheets() {
     `<button data-answer="${a.id}"><em>${a.icon}</em>${a.label}</button>`).join("");
   $$("#checkinOptions button").forEach(b => b.onclick = () => { closeSheets(); doCheckIn(b.dataset.answer); });
 
-  $("#feedSub").textContent = state.pet.favDiscovered
+  const sattHint = state.pet.stats.saettigung >= 85 ? " \u2013 Achtung: Mimo ist gerade pappsatt." : "";
+  $("#feedSub").textContent = (state.pet.favDiscovered
     ? `Lieblingssnack: ${SNACKS.find(s => s.id === state.pet.favSnack).title}`
-    : fmt("%N hat einen geheimen Lieblingssnack.", ctx());
+    : fmt("%N hat einen geheimen Lieblingssnack.", ctx())) + sattHint;
   const feedSnacks = SNACKS.concat(PREMIUM_SNACKS.filter(s => state.ownedSnacks.includes(s.id)));
   $("#feedGrid").innerHTML = feedSnacks.map(s => {
     const fav = state.pet.favDiscovered && s.id === state.pet.favSnack;
+    const fx = [`+${s.eff.saett} Satt`];
+    if (s.eff.laune >= 7) fx.push(`+${s.eff.laune} Laune`);
+    if (s.eff.xp) fx.push(`+${s.eff.xp} XP`);
+    if (s.eff.bond) fx.push(`+${s.eff.bond} Bond`);
     return `<button data-snack="${s.id}">${fav ? '<span class="fav">\u2665</span>' : ""}
-      <em>${s.icon}</em><strong>${s.title}</strong><small>${s.sub}</small></button>`;
+      <em>${s.icon}</em><strong>${s.title}</strong><small>${s.sub}</small>
+      <span class="feed-fx">${fx.join(" \u00b7 ")}</span></button>`;
   }).join("");
   $$("#feedGrid button").forEach(b => b.onclick = () => { closeSheets(); feed(b.dataset.snack); });
 
@@ -1767,7 +2242,7 @@ function buildSheets() {
   $$("#expedOptions button").forEach(b => b.onclick = () => { closeSheets(); startExpedition(b.dataset.tier); });
   $("#expedLog").innerHTML = EXPED_DESTS.map(d => {
     const v = state.destVisits[d.id] || 0, m = destMastery(d.id);
-    const next = m >= 3 ? "" : ` \u00b7 noch ${(m >= 2 ? 6 : m >= 1 ? 3 : 1) - v} bis ${MASTERY_NAMES[m + 1] || "Besucher"}`;
+    const next = m >= 3 ? "" : ` \u00b7 noch ${(m >= 2 ? 12 : m >= 1 ? 5 : 1) - v} bis ${MASTERY_NAMES[m + 1] || "Besucher"}`;
     return `<div class="log-row"><span class="log-icon">${d.icon}</span>
       <span class="log-info"><strong>${d.title}</strong><small>${v}x besucht${next}</small></span>
       <span class="chip chip-small" style="${m >= 3 ? "color:#c98a12;background:#c98a1222" : ""}">${m ? MASTERY_NAMES[m] : "Neu"}</span></div>`;
@@ -1983,6 +2458,10 @@ function endGame() {
   game.running = false;
   if (game.comboBest >= 5) unlockAchievement("combo.5");
   submitGame();
+  if (game.score > 0 && game.score >= (state.best[game.mode] || 0)) {
+    homePet?.emote("star", 2200);
+    if (game.score >= 12) captureMoment("rekord", `${game.score} bei ${GAME_DEFS[game.mode].title}`);
+  }
   $("#gameFinalScore").textContent = `${game.score} ${game.mode === "blasen" ? "Blasen" : "Sterne"}`;
   const isBest = game.score >= (state.best[game.mode] || 0) && game.score > 0;
   $("#gameNewBest").classList.toggle("hidden", !isBest);
@@ -2078,6 +2557,18 @@ function switchTab(tab) {
   window.scrollTo(0, 0);
 }
 
+function dailyGreeting() {
+  if (!state.onboarded || state.lastGreetDay === todayKey()) return;
+  state.lastGreetDay = todayKey();
+  let text;
+  const last = state.pet.memory.recent[0];
+  if (last === "stressig" && state.pet.lastCheckInDay === yesterdayKey()) text = GREETINGS.afterStress;
+  else if (last === "super" && state.pet.lastCheckInDay === yesterdayKey()) text = GREETINGS.afterSuper;
+  else text = pick(GREETINGS[dayPhase()]);
+  setTimeout(() => showReaction(fmt(text, ctx())), 900);
+  save();
+}
+
 function timeTick() {
   document.body.className = "phase-" + dayPhase();
   checkExpeditionReturn();
@@ -2110,6 +2601,7 @@ function bootApp() {
   switchTab("home");
   showAway();
   showReturn();
+  dailyGreeting();
   setInterval(timeTick, 60000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { timeTick(); showReturn(); } });
 }
@@ -2120,13 +2612,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $$(".action").forEach(btn => btn.addEventListener("click", () => {
     const a = btn.dataset.action;
-    if (a === "streicheln") { homePet?.squish(); spawnHearts($("#petMount")); interact(a); }
-    else if (a === "schlafen") { homePet?.squish(); interact(a); }
+    if (a === "streicheln") {
+      scrollToScene();
+      showReaction(fmt(RUB_HINT, ctx()));
+      $("#petMount").classList.add("rub-pulse");
+      setTimeout(() => $("#petMount").classList.remove("rub-pulse"), 2600);
+    }
+    else if (a === "schlafen") { scrollToScene(); homePet?.squish(); interact(a); }
     else if (a === "feed") { buildSheets(); openSheet("sheet-feed"); }
     else if (a === "talk") { buildSheets(); openSheet("sheet-talk"); }
     else if (a === "checkin") { buildSheets(); openSheet("sheet-checkin"); }
     else if (a === "game") { buildSheets(); openSheet("sheet-games"); }
   }));
+
+  const petArea = $("#petMount");
+  const stageEl = $(".stage");
+  const pd = (e) => { rub.mode = "pet"; rubStart(e.clientX, e.clientY); };
+  const pm = (e) => rubMove(e.clientX, e.clientY);
+  petArea.addEventListener("pointerdown", pd);
+  stageEl.addEventListener("pointermove", pm);
+  window.addEventListener("pointerup", rubEnd);
+  stageEl.addEventListener("pointerleave", rubEnd);
+
+  const bathStage = $("#bathStage");
+  bathStage.addEventListener("pointerdown", (e) => { rub.mode = "wash"; rubStart(e.clientX, e.clientY); });
+  bathStage.addEventListener("pointermove", pm);
+  bathStage.addEventListener("pointerleave", rubEnd);
+  $("#bathSkip").addEventListener("click", cancelBath);
+  $("#spongeBtn").addEventListener("click", startBath);
 
   $("#chatClose").addEventListener("click", () => { closeSheets(); renderAll(); });
   $("#expedOpen").addEventListener("click", () => { buildSheets(); openSheet("sheet-exped"); });

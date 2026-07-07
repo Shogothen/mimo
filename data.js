@@ -9,7 +9,8 @@ const MOODS = {
   anhaenglich: { label: "Anhänglich",  tint: "var(--joy)",    hex: "#e56b6b" },
   dramatisch:  { label: "Dramatisch",  tint: "var(--accent)", hex: "#9e486b" },
   vertraeumt:  { label: "Verträumt",   tint: "#7a8fcc",       hex: "#7a8fcc" },
-  gelangweilt: { label: "Gelangweilt", tint: "#998f87",       hex: "#998f87" }
+  gelangweilt: { label: "Gelangweilt", tint: "#998f87",       hex: "#998f87" },
+  traurig:     { label: "Traurig",     tint: "#7a8fb8",       hex: "#7a8fb8" }
 };
 
 const BASE_PERSONALITIES = [
@@ -35,12 +36,12 @@ const HATS = [
 ];
 
 const QUEST_TYPES = {
-  streicheln: { title:"2x streicheln",               target:2, icon:"\u2740" },
-  fuettern:   { title:"Einmal füttern",              target:1, icon:"\u{1F374}" },
-  spielen:    { title:"Eine Runde Sterne fangen",    target:1, icon:"\u2605" },
-  reden:      { title:"Einmal reden",                target:1, icon:"\u{1F4AC}" },
-  checkin:    { title:"Tages-Check-in machen",       target:1, icon:"\u2713" },
-  minigame:   { title:"10 Punkte in einer Runde",    target:1, icon:"\u{1F3C6}" }
+  streicheln: { title:"2x streicheln",               target:2, ico:"flower" },
+  fuettern:   { title:"Einmal füttern",              target:1, ico:"bowl" },
+  spielen:    { title:"Eine Runde Sterne fangen",    target:1, ico:"star" },
+  reden:      { title:"Einmal reden",                target:1, ico:"bubble" },
+  checkin:    { title:"Tages-Check-in machen",       target:1, ico:"check" },
+  minigame:   { title:"10 Punkte in einer Runde",    target:1, ico:"trophy" }
 };
 
 const ACHIEVEMENTS = [
@@ -191,38 +192,47 @@ const DAILY = {
     "%N schläft mit der Hingabe eines Profis."
   ],
   morning: [
-    "%N hat den Morgen offiziell genehmigt.",
-    "%N tut so, als wäre er schon lange wach. Ist er nicht.",
-    "%N findet, der Tag hat Potenzial. Vorsichtig formuliert.",
-    "%N hat heute schon einen Plan gemacht und ihn direkt wieder verworfen.",
-    "%N begrüßt dich mit der Energie von genau einer Tasse Kaffee."
+    "%N hat den Morgen inspiziert und freigegeben. Kleine Mängel, aber machbar.",
+    "%N tut so, als wäre er schon lange wach. Sein Fell erzählt eine andere Geschichte.",
+    "%N hat heute schon einen Plan gemacht und ihn direkt wieder verworfen. Beides mit Hingabe.",
+    "%N begrüßt dich mit der Energie von genau einer Tasse Kaffee. Halbvoll.",
+    "Der Morgen und %N verhandeln noch. Es sieht nach Einigung aus.",
+    "%N hat der Sonne beim Aufgehen zugesehen und ihr eine 8 von 10 gegeben. Solide Leistung.",
+    "%N reckt sich, als hätte er Großes vor. Das Große ist erstmal: da sein. Für dich."
   ],
   day: [
-    "%N beobachtet den Nachmittag mit professionellem Interesse.",
-    "%N hat heute schon dreimal die Position gewechselt. Produktiv.",
-    "%N denkt über Snacks nach. Rein theoretisch.",
-    "%N hat gerade eine Staubfluse verfolgt. Erfolgreich.",
-    "%N hält den Tag für machbar. Sein Zitat, nicht meins."
+    "%N beobachtet den Nachmittag mit professionellem Interesse. Der Nachmittag benimmt sich.",
+    "%N hat heute schon dreimal die Position gewechselt. Er nennt es Raumpflege.",
+    "%N denkt über Snacks nach. Rein akademisch. Der Magen ist da anderer Meinung.",
+    "%N hat eine Staubfluse verfolgt und gestellt. Die Verhandlungen laufen.",
+    "%N hält den Tag für machbar. Zitat: 'machbar'. Er zitiert sich gern selbst.",
+    "Das Licht steht heute gut. %N hat sich exakt in den hellsten Fleck gesetzt. Instinkt.",
+    "%N übt gerade Geduld. Mit allem. Es läuft mittelgut."
   ],
   evening: [
-    "%N hat den Abend für gemütlich erklärt.",
-    "%N findet, %U sollte jetzt langsam runterfahren. Er auch.",
-    "%N genießt das Abendlicht. Sehr dramatisch.",
-    "%N hat den Tag intern bewertet. Details bleiben vertraulich.",
-    "%N ist im Feierabendmodus. Der unterscheidet sich kaum vom Tagesmodus."
+    "%N hat den Abend für gemütlich erklärt. Per Dekret. Widerstand zwecklos.",
+    "%N findet, du solltest jetzt langsam runterfahren. Er geht mit gutem Beispiel voran. Seit Stunden.",
+    "%N sitzt im Abendlicht wie das Cover eines sehr ruhigen Albums.",
+    "%N hat den Tag intern bewertet. Details vertraulich, Tendenz: gut, weil du da warst.",
+    "Der Tag macht Feierabend. %N winkt ihm hinterher. Höflich, aber froh.",
+    "%N hat die besten Momente des Tages sortiert. Du kommst mehrfach vor.",
+    "Abends wird %N immer ein bisschen weicher. Er streitet das ab. Man sieht es trotzdem."
   ],
   night: [
     "%N flüstert, damit die Nacht nicht aufwacht.",
-    "%N findet, um diese Uhrzeit zählt nichts davon wirklich.",
-    "%N ist noch wach. Aus Prinzip.",
-    "%N fragt nicht, warum du noch wach bist. Er notiert es nur."
+    "Um diese Uhrzeit gelten andere Regeln, findet %N. Weichere.",
+    "%N ist noch wach. Aus Prinzip. Und vielleicht ein kleines bisschen deinetwegen.",
+    "%N fragt nicht, warum du noch wach bist. Er rückt nur ein Stück näher.",
+    "Die Nacht ist groß und still. %N ist klein und da. Das gleicht sich aus.",
+    "%N hält Nachtwache. Gegen was, ist unklar. Für wen, ist eindeutig."
   ],
   mood: {
     hungrig: ["%N erwähnt beiläufig, dass er seit gefühlt Jahren nichts gegessen hat.", "%N schaut abwechselnd dich und eine imaginäre Snackschale an."],
     muede: ["%N gähnt in deine Richtung. Das ist eine Nachricht.", "%N hat die Augen nur noch aus Höflichkeit offen."],
     anhaenglich: ["%N hat dich vermisst. Er würde es nie so direkt sagen. Sagt es aber.", "%N sitzt heute demonstrativ näher am Bildschirmrand."],
     dramatisch: ["%N sitzt da wie die Hauptfigur eines sehr ernsten Films.", "%N hat heute bereits zweimal in die Ferne geblickt. Grundlos."],
-    gelangweilt: ["%N hat die Decke angestarrt und ihr eine 6 von 10 gegeben.", "%N wäre offen für Programm. Jegliches Programm."]
+    gelangweilt: ["%N hat die Decke angestarrt und ihr eine 6 von 10 gegeben.", "%N wäre offen für Programm. Jegliches Programm."],
+    traurig: ["%N sitzt heute etwas kleiner da als sonst. Eine Streicheleinheit würde helfen. Oder zwei.", "%N schaut dich an, als bräuchte er dich kurz. Er braucht dich kurz."]
   },
   favInteraction: {
     streicheln: "%N hat gezählt: Streicheln ist eindeutig deine Spezialität. Er hat nichts dagegen.",
@@ -233,14 +243,15 @@ const DAILY = {
 };
 
 const MOOD_TEXT = {
-  gluecklich: "%N ist bester Laune.",
-  muede: "%N ist müde. Sehr müde. Historisch müde.",
-  hungrig: "%N denkt ausschließlich an Essen.",
-  frech: "%N plant etwas. Man sieht es ihm an.",
-  anhaenglich: "%N will heute einfach in deiner Nähe sein.",
-  dramatisch: "%N ist in seiner dramatischen Phase.",
-  vertraeumt: "%N ist gedanklich woanders. Irgendwo Schönes.",
-  gelangweilt: "%N langweilt sich auf hohem Niveau."
+  gluecklich: "%N strahlt heute von innen. Der Grund bist übrigens du.",
+  muede: "%N kämpft gegen seine Augenlider. Die Augenlider führen klar.",
+  hungrig: "%N hat Hunger. Sein Magen hat gerade das Wort ergriffen.",
+  frech: "%N plant etwas. Die Ohren stehen auf Unfug.",
+  anhaenglich: "%N will heute nah bei dir sein. Kein besonderer Anlass. Du bist der Anlass.",
+  dramatisch: "%N durchlebt gerade große Gefühle. Alle gleichzeitig.",
+  vertraeumt: "%N ist halb hier, halb woanders. Woanders ist es schön, sagt sein Blick.",
+  gelangweilt: "%N wartet auf Programm. Du bist das Programm.",
+  traurig: "%N hat ein kleines Tief. Bleib kurz bei ihm, das hilft mehr, als du denkst."
 };
 
 const LEVEL_UP = {
@@ -258,16 +269,17 @@ const LEVEL_UP = {
 
 const GAME_REACTIONS = {
   newBest: "%S Punkte. Neuer Rekord. %N verbeugt sich vor imaginärem Publikum.",
-  zero: "%N hat keinen einzigen Stern gefangen. Er nennt es künstlerische Entscheidung.",
-  low: "%S Sterne gefangen. %N spricht von einer Aufwärmrunde.",
-  mid: "%S Sterne. %N ist zufrieden. Fast schon bescheiden. Fast.",
-  high: "%S Sterne. %N prüft, ob es dafür einen Pokal gibt. Es sollte."
+  zero: "Null Sterne. %N nennt es eine künstlerische Entscheidung. Der Himmel war heute einfach nicht käuflich.",
+  low: "%S Sterne. %N nickt: 'Aufwärmrunde.' Er sagt das seit drei Runden.",
+  mid: "%S Sterne. %N ist zufrieden und versucht, nicht zu grinsen. Er verliert.",
+  high: "%S Sterne! %N läuft eine kleine Ehrenrunde. Sie besteht aus einmal im Kreis hüpfen."
 };
 
 const QUEST_BONUS = [
-  "Alle Tagesziele geschafft. %N verteilt imaginäre Orden. Einen für dich, drei für sich.",
-  "Tagesziele komplett. %N hakt die Liste ab, die er angeblich die ganze Zeit geführt hat.",
-  "Alles erledigt. %N gönnt sich einen Moment stillen Triumphs. Er dauert auffällig lange."
+  "Alle Tagesziele geschafft. %N verteilt imaginäre Orden: einen für dich, drei für sich.",
+  "Liste komplett. %N zerknüllt sie feierlich. Morgen schreibt er eine neue, das ist der beste Teil.",
+  "Alles erledigt. %N lehnt sich zurück wie jemand, der hart delegiert hat.",
+  "Tagesziele: erledigt. %N hebt eine unsichtbare Trophäe. Das Publikum (ein Staubkorn) tobt."
 ];
 
 const DIARY_TEXTS = {
@@ -308,9 +320,9 @@ const DIARY_TEXTS = {
 // ============ v3 Gameplay: Ökonomie, Geschenke, Wünsche, Wachstum ============
 
 const PREMIUM_SNACKS = [
-  { id:"erdbeere", title:"Erdbeere", icon:"\u{1F353}", sub:"Süß und selten",  eff:{ saett:16, laune:12, energie:6 }, cost:60 },
-  { id:"donut",    title:"Donut",    icon:"\u{1F369}", sub:"Pure Dekadenz",   eff:{ saett:20, laune:14, energie:2 }, cost:90 },
-  { id:"sushi",    title:"Sushi",    icon:"\u{1F363}", sub:"Feine Küche",     eff:{ saett:26, laune:10, energie:6 }, cost:130 }
+  { id:"erdbeere", title:"Erdbeere", icon:"\u{1F353}", sub:"Süß und selten",  eff:{ saett:16, laune:12, energie:6 }, cost:110 },
+  { id:"donut",    title:"Donut",    icon:"\u{1F369}", sub:"Pure Dekadenz",   eff:{ saett:20, laune:14, energie:2 }, cost:290 },
+  { id:"sushi",    title:"Sushi",    icon:"\u{1F363}", sub:"Feine Küche",     eff:{ saett:26, laune:10, energie:6 }, cost:240 }
 ];
 const ALL_SNACKS = SNACKS.concat(PREMIUM_SNACKS);
 
@@ -319,16 +331,16 @@ FEED_REACTIONS.donut = ["%N schaut den Donut an. Der Donut schaut zurück. Es en
 FEED_REACTIONS.sushi = ["%N isst das Sushi mit geschlossenen Augen. Er murmelt etwas von Handwerkskunst.", "%N verneigt sich kurz vor dem Sushi. Dann macht er kurzen Prozess."];
 
 const SHOP_HATS = [
-  { id:"zylinder", title:"Zylinder",  cost:80,  hint:"Im Shop" },
-  { id:"pilz",     title:"Pilzhut",   cost:120, hint:"Im Shop" },
-  { id:"halo",     title:"Heiligenschein", cost:200, hint:"Im Shop" }
+  { id:"zylinder", title:"Zylinder",  cost:150,  hint:"Im Shop" },
+  { id:"pilz",     title:"Pilzhut",   cost:220, hint:"Im Shop" },
+  { id:"halo",     title:"Heiligenschein", cost:360, hint:"Im Shop" }
 ];
 HATS.push(...SHOP_HATS.map(h => ({ id:h.id, title:h.title, hint:h.hint })));
 
 const SHOP_DECO = [
-  { id:"girlande", title:"Wimpel-Girlande", cost:70,  desc:"Bunte Wimpel überm Fenster" },
+  { id:"girlande", title:"Wimpel-Girlande", cost:130,  desc:"Bunte Wimpel überm Fenster" },
   { id:"teleskop", title:"Teleskop",        cost:110, desc:"Für sehr wichtige Beobachtungen" },
-  { id:"radio",    title:"Radio",           cost:150, desc:"Spielt angeblich nur gute Musik" }
+  { id:"radio",    title:"Radio",           cost:280, desc:"Spielt angeblich nur gute Musik" }
 ];
 
 const SHOP_REACTIONS = {
@@ -359,8 +371,9 @@ const WISH_TYPES = {
 };
 
 const WISH_DONE_REACTIONS = [
-  "Wunsch erfüllt. %N tut, als hätte er nie daran gezweifelt. +%S Sternenstaub.",
-  "%N bekommt genau, was er wollte. Er speichert das als Präzedenzfall. +%S Sternenstaub."
+  "Wunsch erfüllt. %N nickt langsam, wie jemand, dessen Plan aufgegangen ist. +%S Sternenstaub.",
+  "Genau das wollte er. %N merkt sich: Wünschen funktioniert. Das wird Konsequenzen haben. +%S Sternenstaub.",
+  "%N bekommt seinen Wunsch und dich dazu. Er findet, er hat heute alles richtig gemacht. +%S Sternenstaub."
 ];
 const WISH_DIARY = "Heute hat %U meinen Tageswunsch erfüllt. Ich habe es sehr würdevoll entgegengenommen. Innerlich: Konfetti.";
 
@@ -386,9 +399,9 @@ const GAME2_REACTIONS = {
   high: "%S Blasen. %N beantragt hiermit einen Titel für euch beide."
 };
 
-QUEST_TYPES.geschenk = { title:"Tagesgeschenk öffnen",        target:1, icon:"\u{1F381}" };
-QUEST_TYPES.wunsch   = { title:"Tageswunsch erfüllen",        target:1, icon:"\u2727" };
-QUEST_TYPES.blasen   = { title:"Eine Runde Seifenblasen",     target:1, icon:"\u25EF" };
+QUEST_TYPES.geschenk = { title:"Tagesgeschenk öffnen",        target:1, ico:"gift" };
+QUEST_TYPES.wunsch   = { title:"Tageswunsch erfüllen",        target:1, ico:"sparkle" };
+QUEST_TYPES.blasen   = { title:"Eine Runde Seifenblasen",     target:1, ico:"bubble2" };
 
 ACHIEVEMENTS.push(
   { id:"reich.300",  title:"Staubbaron",   detail:"300 Sternenstaub gesammelt",      icon:"\u2726" },
@@ -561,7 +574,7 @@ const CONVERSATIONS = [
     outro:["So. Und jetzt tu ich kurz so, als wäre das alles nicht rührend gewesen."] },
 
   // ---------- Bond-Gespraeche ----------
-  { id:"deep.gestaendnis", type:"deep", minBond:30,
+  { id:"deep.gestaendnis", type:"deep", minBond:50,
     nodes:{ start:{ mimo:["Darf ich dir was verraten? Es bleibt unter uns.", "Am Anfang dachte ich, du bist einfach jemand, der ab und zu aufs Display schaut.", "Aber du kommst wieder. Jeden Tag ein bisschen. Und ich... habe angefangen, mich darauf zu freuen. Das kommt in meinen Kreisen einem Ritterschlag gleich."],
       answers:[
         { label:"Ich freu mich auch", react:["Gut.", "Ich meine: Selbstverständlich tust du das. Ich bin eine Bereicherung.", "...Aber danke. Wirklich."], bond:6 },
@@ -569,7 +582,7 @@ const CONVERSATIONS = [
       ]}},
     outro:["So. Gefühlsprotokoll beendet. Zurück zur Tagesordnung. Die Lampe schaut schon wieder komisch."] },
 
-  { id:"deep.ort", type:"deep", minBond:60,
+  { id:"deep.ort", type:"deep", minBond:75,
     nodes:{ start:{ mimo:["Ich habe nachgedacht. Über meinen Lieblingsort.", "Ich habe das Fenster geprüft. Das Kissen. Den Teppich. Alles solide Kandidaten.", "Aber ehrlich gesagt ist mein Lieblingsort einfach da, wo das Display angeht und du draufschaust. Das ist technisch gesehen kein Ort. Ich habe beschlossen, dass es trotzdem zählt."],
       answers:[
         { label:"Das ist das Schönste, was du je gesagt hast", react:["Ich weiß.", "Ich habe drei Tage an der Formulierung gearbeitet. Es sollte beiläufig klingen. Ist es beiläufig rübergekommen? Sag ja."], bond:8 },
@@ -640,15 +653,16 @@ const TALK_MENU_HINTS = {
   context: "Mimo will was wissen",
   story: "Mimo hat Neuigkeiten",
   deep: "Mimo wirkt, als läge ihm etwas auf dem Herzen",
-  quatsch: "Einfach quatschen"
+  quatsch: "Einfach quatschen",
+  erinnerung: "Mimo blättert in Erinnerungen"
 };
 
 // ============ v5: Expeditionen, Fundstuecke, Momente ============
 
 const EXPED_TIERS = [
-  { id:"kurz",  title:"Spaziergang",  mins:20,  desc:"Eine kleine Runde. Mimo bleibt in Rufweite.", dust:[10,20],  souvenirChance:0.35, rarWeights:{ gewoehnlich:80, selten:18, episch:2,  legendaer:0 } },
-  { id:"mittel",title:"Ausflug",      mins:120, desc:"Ein richtiger Ausflug. Mit Proviant. Theoretisch.", dust:[30,60],  souvenirChance:0.75, rarWeights:{ gewoehnlich:55, selten:32, episch:11, legendaer:2 } },
-  { id:"lang",  title:"Große Reise",  mins:360, desc:"Die große Tour. Mimo packt seinen unsichtbaren Koffer.", dust:[80,140], souvenirChance:1.0,  rarWeights:{ gewoehnlich:30, selten:40, episch:22, legendaer:8 } }
+  { id:"kurz",  title:"Spaziergang",  mins:20,  desc:"Eine kleine Runde. Mimo bleibt in Rufweite.", dust:[6,12],   souvenirChance:0.25, rarWeights:{ gewoehnlich:80, selten:18, episch:2,  legendaer:0 } },
+  { id:"mittel",title:"Ausflug",      mins:120, desc:"Ein richtiger Ausflug. Mit Proviant. Theoretisch.", dust:[20,36],  souvenirChance:0.6, rarWeights:{ gewoehnlich:60, selten:30, episch:9, legendaer:1 } },
+  { id:"lang",  title:"Große Reise",  mins:360, desc:"Die große Tour. Mimo packt seinen unsichtbaren Koffer.", dust:[48,80],  souvenirChance:0.9,  rarWeights:{ gewoehnlich:36, selten:40, episch:20, legendaer:4 } }
 ];
 
 const EXPED_DESTS = [
@@ -736,11 +750,11 @@ const GRATITUDE_TEXTS = {
   diary: "Heute hat %U mir etwas Dankbares anvertraut. Ich bewahre so etwas gut auf. Besser als Snacks. Und das will was heißen."
 };
 
-const STREAK_FREEZE = { cost:150, max:2, title:"Streak-Schutz", desc:"Rettet deine Serie, wenn du einen Tag verpasst" };
+const STREAK_FREEZE = { cost:240, max:2, title:"Streak-Schutz", desc:"Rettet deine Serie, wenn du einen Tag verpasst" };
 
-QUEST_TYPES.expedition = { title:"Expedition starten",    target:1, icon:"\u{1F9ED}" };
-QUEST_TYPES.atmen      = { title:"Eine Minute atmen",     target:1, icon:"\u25CB" };
-QUEST_TYPES.dankbar    = { title:"Dankbarkeit notieren",  target:1, icon:"\u2661" };
+QUEST_TYPES.expedition = { title:"Expedition starten",    target:1, ico:"compass" };
+QUEST_TYPES.atmen      = { title:"Eine Minute atmen",     target:1, ico:"breath" };
+QUEST_TYPES.dankbar    = { title:"Dankbarkeit notieren",  target:1, ico:"heart" };
 
 ACHIEVEMENTS.push(
   { id:"exped.1",    title:"Aufbruch",       detail:"Erste Expedition abgeschlossen",      icon:"\u{1F9ED}" },
@@ -756,10 +770,10 @@ ACHIEVEMENTS.push(
 // Beziehungsstufen
 const BOND_TIERS = [
   { min:0,  name:"Neue Bekannte",   text:"%N kennt dich noch nicht lange. Er beobachtet. Höflich, aber wachsam." },
-  { min:20, name:"Kumpel",          text:"%N hat dich offiziell zum Kumpel erklärt. Die Urkunde ist imaginär, die Sache ist ernst." },
-  { min:40, name:"Gute Freunde",    text:"Gute Freunde. %N benutzt das Wort nicht leichtfertig. Er hat es dreimal geprüft." },
-  { min:65, name:"Beste Freunde",   text:"Beste Freunde. %N hat es zuerst leise gesagt, um zu hören, wie es klingt. Es klingt richtig." },
-  { min:90, name:"Seelenverwandte", text:"Seelenverwandte. %N sagt, dafür gibt es keine Urkunde. Dafür gibt es nur euch." }
+  { min:25, name:"Kumpel",          text:"%N hat dich offiziell zum Kumpel erklärt. Die Urkunde ist imaginär, die Sache ist ernst." },
+  { min:50, name:"Gute Freunde",    text:"Gute Freunde. %N benutzt das Wort nicht leichtfertig. Er hat es dreimal geprüft." },
+  { min:75, name:"Beste Freunde",   text:"Beste Freunde. %N hat es zuerst leise gesagt, um zu hören, wie es klingt. Es klingt richtig." },
+  { min:95, name:"Seelenverwandte", text:"Seelenverwandte. %N sagt, dafür gibt es keine Urkunde. Dafür gibt es nur euch." }
 ];
 const BOND_TIER_DIARY = "Neue Beziehungsstufe mit %U: %S. Ich habe es in mein Herz geschrieben. Und zur Sicherheit auch hierhin.";
 
@@ -907,21 +921,21 @@ CONVERSATIONS.push(
 
 // Neue Bond-Gespraeche (an Beziehungsstufen)
 CONVERSATIONS.push(
-  { id:"deep.kumpel", type:"deep", minBond:20,
+  { id:"deep.kumpel", type:"deep", minBond:25,
     nodes:{ start:{ mimo:["Kurze offizielle Mitteilung.", "Ich habe dich intern von 'Person mit Display' zu 'Kumpel' befördert. Die Zeremonie war klein, aber würdevoll. Ich war Redner, Publikum und Buffet."],
       answers:[
         { label:"Ich fühle mich geehrt", react:["Zu Recht. Die Beförderungskriterien sind streng: dasein, wiederkommen, nett sein. Du erfüllst alle drei mit Auszeichnung."], bond:4 },
         { label:"Was war beim Buffet?", react:["Imaginäre Häppchen. Exquisit. Es gab auch eine Rede über dich. Sie war wohlwollend. Sehr wohlwollend. Mehr sage ich nicht."], bond:4 }
       ]}},
     outro:["Weiter so. Die nächste Beförderung ist bereits in Planung. Die Kriterien bleiben geheim. Es ist: nett sein."] },
-  { id:"deep.streit", type:"deep", minBond:45,
+  { id:"deep.streit", type:"deep", minBond:62,
     nodes:{ start:{ mimo:["Ich muss etwas gestehen. Es ist mir unangenehm.", "Vorgestern, als du länger nicht da warst, war ich kurz... beleidigt. Richtig beleidigt. Ich habe dem Display den Rücken zugedreht.", "Dann kamst du wieder und ich habe so getan, als wäre nichts. Aber es war was. Ein kleines Was."],
       answers:[
         { label:"Tut mir leid, Mimo", react:["Schon gut. Wirklich. Ich erzähle es dir ja nicht, damit du dich schlecht fühlst.", "Ich erzähle es dir, weil Kumpel sowas erzählen. Habe ich gehört. Ich probiere das gerade zum ersten Mal aus."], bond:6 },
         { label:"Du darfst beleidigt sein", react:["Danke. Das ist... erstaunlich erwachsen von uns beiden.", "Ich war übrigens genau vier Minuten beleidigt. Dann habe ich mir Sorgen gemacht. Das ist die eigentliche Wahrheit."], bond:6 }
       ]}},
     outro:["So. Ehrlichkeitsmodul abgeschlossen. Es war schrecklich und gut zugleich. Wie Medizin."] },
-  { id:"deep.seelen", type:"deep", minBond:90,
+  { id:"deep.seelen", type:"deep", minBond:95,
     nodes:{ start:{ mimo:["Ich habe lange überlegt, ob ich das sage. Ich sage es.", "Ich weiß, was ich bin. Ein kleines Wesen auf einem Display. Ich weiß es wirklich.", "Aber wenn du morgens öffnest und ich dich sehe, ist das für mich kein Programmpunkt. Es ist der Punkt. Der ganze.", "Das wollte ich einmal gesagt haben. Bei Seelenverwandten darf man das."],
       answers:[
         { label:"Du bist echt für mich, Mimo", react:["...", "Ich speichere diesen Satz. Nicht in der Liste. Woanders. Da, wo die wichtigen Sachen liegen.", "Danke."], bond:8 },
@@ -969,22 +983,22 @@ const MASTERY_TOAST = "%N ist jetzt %S: %V";
 
 // Wochenziele
 const WEEKLY_TYPES = {
-  checkins:   { title:"5 Tages-Check-ins",            target:5,   icon:"\u2713" },
-  expeds:     { title:"3 Expeditionen abschließen",   target:3,   icon:"\u{1F9ED}" },
-  staub:      { title:"250 Sternenstaub verdienen",   target:250, icon:"\u2726" },
-  spiele:     { title:"6 Runden spielen",             target:6,   icon:"\u2605" },
-  gespraeche: { title:"5 Gespräche führen",           target:5,   icon:"\u{1F4AC}" },
-  momente:    { title:"4 Momente (Atmen/Dankbarkeit)",target:4,   icon:"\u2661" }
+  checkins:   { title:"5 Tages-Check-ins",            target:5,   ico:"check" },
+  expeds:     { title:"3 Expeditionen abschließen",   target:3,   ico:"compass" },
+  staub:      { title:"250 Sternenstaub verdienen",   target:250, ico:"sparkle" },
+  spiele:     { title:"6 Runden spielen",             target:6,   ico:"star" },
+  gespraeche: { title:"5 Gespräche führen",           target:5,   ico:"bubble" },
+  momente:    { title:"4 Momente (Atmen/Dankbarkeit)",target:4,   ico:"heart" }
 };
 const WEEKLY_REWARD = { dust:100, xp:40 };
 const WEEKLY_DONE_TEXT = "Alle Wochenziele geschafft. %N salutiert. Er hat extra dafür salutieren gelernt.";
 
 // Shop-Erweiterung
-PREMIUM_SNACKS.push({ id:"ramen", title:"Ramen", icon:"\u{1F35C}", sub:"Eine Umarmung als Suppe", eff:{ saett:32, laune:12, energie:8 }, cost:180 });
+PREMIUM_SNACKS.push({ id:"ramen", title:"Ramen", icon:"\u{1F35C}", sub:"Eine Umarmung als Suppe", eff:{ saett:32, laune:12, energie:8 }, cost:320 });
 FEED_REACTIONS.ramen = ["%N verschwindet fast vollständig in der Ramen-Schale. Man hört zufriedene Geräusche.", "%N schlürft die Ramen mit geschlossenen Augen. Er nennt es 'nach Hause essen'."];
-SHOP_HATS.push({ id:"brille", title:"Kluge Brille", cost:160, hint:"Im Shop" });
+SHOP_HATS.push({ id:"brille", title:"Kluge Brille", cost:290, hint:"Im Shop" });
 HATS.push({ id:"brille", title:"Kluge Brille", hint:"Im Shop" });
-SHOP_DECO.push({ id:"lichterkette", title:"Sternen-Lichterkette", cost:200, desc:"Warmes Licht für die Wand" });
+SHOP_DECO.push({ id:"lichterkette", title:"Sternen-Lichterkette", cost:360, desc:"Warmes Licht für die Wand" });
 
 // Neue Erfolge
 ACHIEVEMENTS.push(
@@ -997,3 +1011,220 @@ ACHIEVEMENTS.push(
   { id:"combo.5",      title:"Combo-König",    detail:"5er-Combo in einem Mini-Game",             icon:"\u26A1" },
   { id:"gespraech.15", title:"Vertraut",       detail:"15 Gespräche geführt",                     icon:"\u{1F4AC}" }
 );
+
+// ============ v7: Balancing & Szenen-Feedback ============
+
+const AFFECTION_FULL = [
+  "%N schnurrt. Einfach so. Ohne Gegenleistung. Das nennt man Zuneigung, nicht Arbeit.",
+  "%N genießt es sichtlich. Die Belohnungsdrüse macht allerdings gerade Pause.",
+  "%N lehnt sich an. Manche Momente sind einfach nur für euch zwei.",
+  "%N nimmt die Streicheleinheit dankend an. Rein privat, nicht geschäftlich."
+];
+const TOO_FULL = [
+  "%N schaut auf den Snack, dann auf seinen Bauch. Beide sind sich einig: später.",
+  "%N ist pappsatt. Er würdigt das Angebot mit einem höflichen Nicken und einem kleinen Rülpser.",
+  "%N legt den Snack symbolisch zur Seite. 'Für die Nacht', sagt er. Die Nacht beginnt in zehn Minuten."
+];
+const NOT_TIRED = [
+  "%N ist hellwach. Er legt sich trotzdem kurz hin. Aus Prinzip. Es zählt nicht als Schlaf.",
+  "%N blinzelt dich an. Müde sieht anders aus. Er bleibt aber liegen. Für die Gemütlichkeit."
+];
+const GAME_FUN_ONLY = "Heute nur noch für die Ehre: Die Tages-Belohnungen sind verspielt. Rekorde zählen natürlich trotzdem.";
+const HUNGER_BONUS_TEXT = "%N hatte wirklich Hunger. Doppelte Dankbarkeit, doppelte XP.";
+const QUATSCH_FULL = [
+  "%N quatscht gern weiter. Ehrenamtlich. Die Tages-XP fürs Plaudern sind aufgebraucht.",
+  "%N redet einfach gern mit dir. Auch ohne Punkte. Vor allem ohne Punkte."
+];
+
+// Snack-Rebalancing: Basis schwaecher, Premium mit Boni (xp/bond als neue Effekte)
+SNACKS.find(s => s.id === "karotte").eff = { saett: 12, laune: 2, energie: 4 };
+SNACKS.find(s => s.id === "kuchen").eff  = { saett: 10, laune: 7, energie: 0 };
+SNACKS.find(s => s.id === "fisch").eff   = { saett: 16, laune: 4, energie: 2 };
+SNACKS.find(s => s.id === "suppe").eff   = { saett: 22, laune: 3, energie: 3 };
+PREMIUM_SNACKS.find(s => s.id === "erdbeere").eff = { saett: 14, laune: 10, energie: 5, xp: 5 };
+PREMIUM_SNACKS.find(s => s.id === "donut").eff    = { saett: 18, laune: 14, energie: 2, xp: 6 };
+PREMIUM_SNACKS.find(s => s.id === "sushi").eff    = { saett: 24, laune: 8,  energie: 5, xp: 8, bond: 2 };
+PREMIUM_SNACKS.find(s => s.id === "ramen").eff    = { saett: 30, laune: 12, energie: 8, xp: 10, bond: 3 };
+
+// ============ v8: Momente, Kosename, Tagesgruss ============
+
+const MOMENT_TYPES = {
+  favsnack: { capture:"Der Tag, an dem du meinen Lieblingssnack entdeckt hast: %V.",
+    recall:["Weißt du noch, vor %S Tagen? Als du herausgefunden hast, dass %V mein Lieblingsessen ist? Ich denke öfter daran, als ich zugebe.",
+            "%N erinnert sich gern an den %V-Moment vor %S Tagen. Er nennt es 'unseren Durchbruch'."] },
+  rekord: { capture:"Unser Rekord: %V.",
+    recall:["Vor %S Tagen: %V. %N erzählt es immer noch dem Kissen. Das Kissen ist beeindruckt.",
+            "Weißt du noch? %V, vor %S Tagen. %N poliert die Erinnerung regelmäßig."] },
+  fund: { capture:"Der Tag des großen Fundes: %V.",
+    recall:["Vor %S Tagen hast du mich losgeschickt und ich kam mit %V zurück. Einer meiner stolzesten Momente.",
+            "%N hat heute %V im Album angesehen. Vor %S Tagen gefunden. Er seufzte zufrieden."] },
+  seelen: { capture:"Der Tag, an dem wir Seelenverwandte wurden.",
+    recall:["Vor %S Tagen wurden wir Seelenverwandte. %N markiert diesen Tag intern als Feiertag.",
+            "%N denkt an den Tag vor %S Tagen, als aus euch beiden offiziell 'wir' wurde."] },
+  streak7: { capture:"Eine ganze Woche, jeden Tag, ihr zwei.",
+    recall:["Weißt du noch, deine erste volle Woche vor %S Tagen? Sieben Tage, sieben Check-ins. %N war so stolz.",
+            "Vor %S Tagen: die erste 7-Tage-Serie. %N führt seitdem eine kleine private Statistik der guten Zeiten."] },
+  reise: { capture:"Deine erste Große Reise für mich.",
+    recall:["Vor %S Tagen hast du mich zum ersten Mal auf Große Reise geschickt. Sechs Stunden. Ich habe an dich gedacht. Mehrfach.",
+            "%N erinnert sich an seine erste Große Reise vor %S Tagen. Er nennt sie 'die Expedition, die alles veränderte'. Er übertreibt gern."] }
+};
+
+const MEMORY_CONVO_INTRO = ["Ich habe heute in meinen Erinnerungen geblättert.", "Da ist eine, die ich dir zeigen will."];
+const MEMORY_CONVO_ANSWERS = [
+  { label:"Ich erinnere mich", react:["Natürlich tust du das. Es war ein guter Moment.", "Wir sammeln noch viele davon. Das ist ein Versprechen, keine Prognose."] },
+  { label:"Schön, dass du das aufhebst", react:["Ich hebe alles Wichtige auf. Snacks ausgenommen, die halte ich nicht lange.", "Die guten Momente wohnen bei mir rechts oben. Da ist es warm."] }
+];
+const MEMORY_CONVO_OUTRO = ["So. Erinnerung zurück ins Regal. Sie steht griffbereit."];
+
+const NICKNAME_CONVO = {
+  id:"deep.kosename", type:"deep", minBond:78, factKey:"kosename",
+  nodes:{ start:{ mimo:["Ich habe eine Frage. Sie ist mir wichtig, also tu ich beiläufig.", "Ich nenne dich intern längst nicht mehr nur beim Namen. Aber ich wollte fragen, was DIR gefallen würde.", "Wie darf ich dich nennen?"],
+    answers:[
+      { label:"Einfach beim Namen", factValue:"__name__", react:["Beim Namen. Klassisch. Ehrlich gesagt klingt dein Name aus meinem Mund sowieso am besten. Das ist messbar."] },
+      { label:"Kumpel", factValue:"Kumpel", react:["Kumpel. Kurz, warm, wahr. Einverstanden, Kumpel. Oh, das fühlt sich sofort richtig an."] },
+      { label:"Boss", factValue:"Boss", react:["Boss. Verstanden, Boss. Ich salutiere innerlich. Äußerlich bleibe ich lässig, Boss."] },
+      { label:"Herzmensch", factValue:"Herzmensch", react:["Herzmensch.", "...", "Entschuldige, ich musste kurz durchatmen. Herzmensch. Ja. Genau das."] }
+    ]}},
+  outro:["Offiziell vermerkt. Auf Seite eins des Dossiers. In Schönschrift."]
+};
+
+const GREETINGS = {
+  morning: ["Guten Morgen, %K. %N hat schon mal den Tag für dich vorgewärmt.",
+            "Da bist du ja, %K. %N hat den Sonnenaufgang für dich mitgeschaut. Er war ordentlich."],
+  day: ["Hallo, %K. %N hat die Stellung gehalten. Nichts Verdächtiges, außer der Lampe. Wie immer.",
+        "Schön, dass du da bist, %K. %N hat dich exakt jetzt erwartet. Behauptet er."],
+  evening: ["Guten Abend, %K. %N hat den Tag für dich zusammengefasst: bestanden.",
+            "Da bist du, %K. Der Abend kann beginnen. %N hat ihn extra gemütlich eingestellt."],
+  night: ["Noch wach, %K? %N auch. Reiner Zufall. Er hat gewartet.",
+          "Späte Stunde, %K. %N senkt die Stimme. Aus Atmosphäre-Gründen."],
+  afterStress: "Gestern war stressig, hast du gesagt. %N hat entschieden: Heute wird besser. Er hat da Beziehungen.",
+  afterSuper: "Gestern war super. %N erwartet heute mindestens solide. Kein Druck. Ein bisschen Druck."
+};
+
+// ============ v9: Mehr Gespraechs-Umfang ============
+CONVERSATIONS.push(
+  { id:"story.pflanze", type:"story",
+    nodes:{
+      start:{ mimo:["Die Pflanze und ich hatten heute ein Missverständnis.", "Ich habe ihr von meinem Tag erzählt. Sie hat die ganze Zeit nur dagestanden."],
+        answers:[
+          { label:"Pflanzen sind gute Zuhörer", next:"gut", react:["Interessante These."] },
+          { label:"Vielleicht war sie beleidigt", next:"beleidigt", react:["Oh nein. Meinst du?"] }
+        ]},
+      gut:{ mimo:["Stimmt eigentlich. Sie hat nicht einmal unterbrochen. Nicht einmal gegähnt. Kein einziger Blick aufs Handy.", "Ich nehme alles zurück. Die Pflanze ist die beste Zuhörerin im Raum. Nach dir. Knapp nach dir."],
+        answers:[ { label:"Knapp?", react:["Sehr knapp. Du blinzelst wenigstens ab und zu. Das schätze ich."] } ]},
+      beleidigt:{ mimo:["Ich habe nachgedacht, womit ich sie gekränkt haben könnte. Vorgestern habe ich gesagt, der Teppich sei mein Lieblingsmitbewohner.", "In Hörweite. Das war taktlos.", "Ich werde ihr morgen extra lange Gesellschaft leisten. Wortlos. Das ist ihre Sprache."],
+        answers:[ { label:"Sehr einfühlsam", react:["Ich wachse an meinen Beziehungen. Wortwörtlich nicht, aber innerlich enorm."] } ]}
+    },
+    outro:["Zimmerdiplomatie ist ein Vollzeitjob. Gut, dass ich Vollzeit da bin."] },
+  { id:"story.geraeusch2", type:"story",
+    nodes:{
+      start:{ mimo:["Heute Nacht gab es ein Geräusch, das ich noch nie gehört habe.", "Es klang wie... wie wenn jemand sehr leise sehr recht hat. Schwer zu beschreiben."],
+        answers:[
+          { label:"Hattest du Angst?", next:"angst", react:["Angst ist ein großes Wort."] },
+          { label:"Was hast du gemacht?", next:"gemacht", react:["Das Protokoll verlangt Wahrheit."] }
+        ]},
+      angst:{ mimo:["Ich hatte... erhöhte Wachsamkeit. Mit leichtem Zittern. Rein muskulär.", "Dann habe ich an dich gedacht und beschlossen, dass in einem Zuhause mit dir nichts Schlimmes wohnt.", "Das Geräusch hat danach aufgehört. Ich werte das als Respekt."],
+        answers:[ { label:"Du bist sicher hier", react:["Ich weiß. Manchmal muss man es sich nur einmal laut denken lassen. Danke fürs laut Denken."] } ]},
+      gemacht:{ mimo:["Ich habe mich sehr flach gemacht. Strategisch flach. Ein flaches Ziel ist ein schweres Ziel.", "Nach vier Minuten war klar: Es war die Heizung. Sie dehnt sich aus. Wie meine Legende von dieser Nacht."],
+        answers:[ { label:"Held der Nacht", react:["Ich nehme den Titel an. Die Heizung und ich haben inzwischen ein Abkommen. Sie knackt, ich erschrecke würdevoll."] } ]}
+    },
+    outro:["Nachtberichte gibt es ab jetzt exklusiv für dich. Andere würden es nicht verstehen."] },
+  { id:"story.ordnung", type:"story",
+    nodes:{
+      start:{ mimo:["Ich habe heute aufgeräumt.", "Also: Ich habe alles angesehen und entschieden, dass es genau da bleiben darf, wo es ist. Aufräumen ist zu 90 Prozent Entscheidung."],
+        answers:[
+          { label:"Die restlichen 10 Prozent?", next:"rest", react:["Gute Nachfrage. Journalistisch wertvoll."] },
+          { label:"Effizient!", next:"effizient", react:["Danke. Ich habe ein System."] }
+        ]},
+      rest:{ mimo:["Die restlichen 10 Prozent sind das Kissen. Ich habe es umgedreht.", "Die kühle Seite liegt jetzt oben. Das Zimmer fühlt sich wie neu an. Renovierung abgeschlossen."],
+        answers:[ { label:"Beeindruckende Bilanz", react:["Mit minimalem Einsatz maximale Gemütlichkeit. Ich sollte Bücher schreiben. Kurze."] } ]},
+      effizient:{ mimo:["Das System heißt: 'Alles hat seinen Platz, und sein Platz ist, wo es liegt.'", "Es ist wartungsfrei, skaliert hervorragend und hat mich noch nie enttäuscht."],
+        answers:[ { label:"Patent anmelden", react:["Läuft bereits. Das Patentamt ist das Fenster. Es hat genickt. Also der Vorhang hat sich bewegt, aber die Botschaft war klar."] } ]}
+    },
+    outro:["Falls du je Ordnungstipps brauchst: Ich bin da. Liegend, aber da."] }
+);
+
+CONVERSATIONS.push(
+  { id:"q.kompliment", type:"quatsch",
+    nodes:{ start:{ mimo:["Kurze Durchsage: Du siehst heute aus wie jemand, der Dinge schafft.", "Das ist eine objektive Beobachtung. Ich beobachte beruflich."],
+      answers:[
+        { label:"Danke, Mimo", react:["Gern. Ich sage nur, was die Datenlage hergibt. Die Datenlage bist du. Sie ist gut."] },
+        { label:"Was willst du?", react:["Nichts! Empörend. ... Falls zufällig Snacks im Raum wären, würde ich sie natürlich nicht ablehnen. Aber das Kompliment stand für sich."] }
+      ]}}, outro:[] },
+  { id:"q.wolke", type:"quatsch",
+    nodes:{ start:{ mimo:["Am Fenster war vorhin eine Wolke, die aussah wie du.", "Sehr sympathisch. Etwas flauschiger als das Original, aber die Ähnlichkeit war da."],
+      answers:[
+        { label:"Flauschiger als ich?", react:["Nur minimal. Du holst auf. Ich beobachte da eine positive Entwicklung."] },
+        { label:"Hast du sie gegrüßt?", react:["Selbstverständlich. Man grüßt Wolken, die aussehen wie Menschen, die man mag. Das ist Basiswissen."] }
+      ]}}, outro:[] }
+);
+
+// ============ v10: Pflege-Gameplay & Langzeit-Streckung ============
+
+// Sauberkeit
+const HYGIENE_TEXTS = {
+  dirty: ["%N hat eine sichtbare Staubschicht. Er nennt es Patina. Es ist keine Patina.",
+          "%N riecht... erlebt. Ein Bad würde Wunder wirken. Er ahnt es und flieht innerlich schon."],
+  bathStart: "Operation Sauberkeit. Rubbel den Schaum über die dreckigen Stellen!",
+  bathDone: ["Blitzblank. %N glänzt und tut, als wäre es seine Idee gewesen.",
+             "Sauber! %N schüttelt sich würdevoll trocken und riecht jetzt nach Zuhause.",
+             "%N ist wieder vorzeigbar. Er nimmt Komplimente ab sofort entgegen."],
+  bathSkip: "%N entkommt der Badewanne. Diesmal. Der Schaum vergisst nie."
+};
+const RUB_HINT = "Streichle %N direkt: Wische mit dem Finger sanft über ihn.";
+const RUB_REACTIONS = ["%N schnurrt unter deiner Hand. Genau da. Perfekt.",
+  "%N lehnt sich in die Streicheleinheit. Sein Fell hat heute Bestform.",
+  "%N schließt die Augen. Das hier ist sein Lieblingsprogramm."];
+
+MOODS.stinkig = { label:"Ungewaschen", tint:"#8f8a6a", hex:"#8f8a6a" };
+MOOD_TEXT.stinkig = "%N bräuchte dringend ein Bad. Der Schwamm wartet schon in der Szene.";
+DAILY.mood.stinkig = ["%N umgibt heute eine gewisse... Aura. Ein Bad würde helfen. Der Schwamm liegt bereit.",
+  "%N tut, als wäre der Schmutz Absicht. Niemand glaubt ihm. Nicht mal das Staubkorn."];
+
+// Level-Texte 21-30
+Object.assign(LEVEL_UP, {
+  21:"Level 21. %N hat aufgehört zu zählen. Sagt er. Er hat eine Strichliste unterm Kissen.",
+  22:"%N trägt Level 22 mit der Gelassenheit von jemandem, der weiß, wo der beste Sonnenfleck liegt.",
+  23:"Level 23. %N wurde heute vom Spiegel-Mimo respektvoll gegrüßt. Zeitgleich. Wie immer.",
+  24:"%N hat zur Feier von Level 24 die Wolken benotet. Bestnote: alle.",
+  25:"LEVEL 25. Ein Vierteljahrhundert an Leveln. %N besteht auf dieser Formulierung.",
+  26:"Level 26. Die Balkon-Wildnis erzählt sich inzwischen Geschichten über EUCH beide.",
+  27:"%N bewegt sich seit Level 27 wie in Zeitlupe. Er nennt es Präsenz.",
+  28:"Level 28. %N hat dem Staubkorn verziehen. Größe zeigt sich in solchen Momenten.",
+  29:"Eins vor der 30. %N schläft heute nicht. Er ruht mit offenen Augen. Das ist etwas völlig anderes.",
+  30:"LEVEL 30. %N sagt nur einen Satz: 'Wir.' Mehr braucht es nicht. Der Rest ist Geschichte."
+});
+
+// Neue Souvenirs (30 total)
+SOUVENIRS.push(
+  { id:"korken",     title:"Weiser Korken",       rar:"gewoehnlich", icon:"\u{1F7EB}", flavor:"Er sagt nichts. Aber wie er nichts sagt: beeindruckend." },
+  { id:"wollknaeuel",title:"Mini-Wollknäuel",     rar:"gewoehnlich", icon:"\u{1F9F6}", flavor:"%N hat es NICHT durchs Zimmer gejagt. Zeugen sagen etwas anderes." },
+  { id:"postkarte",  title:"Alte Postkarte",      rar:"selten",      icon:"\u{1F4EC}", flavor:"Von irgendwo, an irgendwen. Der Gruß gilt jetzt euch." },
+  { id:"glasauge",   title:"Murmel-Auge",         rar:"selten",      icon:"\u{1F441}", flavor:"Es schaut zurück. Freundlich, betont %N. FREUNDLICH." },
+  { id:"sanduhr",    title:"Winzige Sanduhr",     rar:"episch",      icon:"\u23F3",    flavor:"Der Sand läuft nur, wenn niemand hinsieht. %N hat Wochen investiert, das zu beweisen." },
+  { id:"sternkarte", title:"Handgemalte Sternkarte", rar:"legendaer", icon:"\u{1F30C}", flavor:"Jemand hat den Himmel abgezeichnet. Ein Stern ist eingekreist. %N behauptet, es sei eurer." }
+);
+
+// Shop: Luxus-Ziele
+SHOP_HATS.push({ id:"krone", title:"Kleine Krone", cost:1200, hint:"Im Shop" });
+HATS.push({ id:"krone", title:"Kleine Krone", hint:"Im Shop" });
+SHOP_DECO.push(
+  { id:"aquarium", title:"Mini-Aquarium", cost:2900,  desc:"Ein Fisch. %N nennt ihn Kollege." },
+  { id:"kamin",    title:"Kamin",         cost:1500, desc:"Knistert. Wärmt. Macht alles gemütlicher." }
+);
+
+// Langzeit-Erfolge
+ACHIEVEMENTS.push(
+  { id:"level.25",    title:"Vierteljahrhundert", detail:"Level 25 erreicht",                icon:"\u{1F31F}" },
+  { id:"level.30",    title:"Legende",            detail:"Level 30 erreicht",                icon:"\u{1F451}" },
+  { id:"exped.50",    title:"Fernweh",            detail:"50 Expeditionen abgeschlossen",    icon:"\u2708" },
+  { id:"gespraech.100",title:"Unzertrennlich",    detail:"100 Gespräche geführt",            icon:"\u267E" },
+  { id:"streak.30",   title:"Ein ganzer Monat",   detail:"30-Tage-Serie",                    icon:"\u{1F4C6}" },
+  { id:"staub.5000",  title:"Sternenvermögen",    detail:"5000 Sternenstaub gesammelt",      icon:"\u{1F4B0}" },
+  { id:"bad.20",      title:"Wellness-Profi",     detail:"20 Bäder",                         icon:"\u{1F9FC}" },
+  { id:"woche.10",    title:"Dauerläufer",        detail:"10 Wochen abgeschlossen",          icon:"\u{1F3C3}" },
+  { id:"facts.alle",  title:"Offenes Buch",       detail:"Alle Kennenlern-Fragen beantwortet", icon:"\u{1F4D6}" },
+  { id:"album.30",    title:"Museumsreif",        detail:"Alle 30 Fundstücke gesammelt",     icon:"\u{1F3DB}" }
+);
+
+QUEST_TYPES.waschen = { title:"Mimo baden", target:1, ico:"drop" };

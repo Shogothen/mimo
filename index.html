@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Mimo</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mimo">
+<meta name="theme-color" content="#ffd9ae">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=6">
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<!-- ===== Onboarding ===== -->
+<div id="onboarding" class="screen hidden">
+  <div class="ob-progress"><span class="dot" data-step="0"></span><span class="dot" data-step="1"></span><span class="dot" data-step="2"></span></div>
+  <div class="ob-pet"><div id="obPetMount"></div></div>
+  <div class="card ob-card">
+    <div class="ob-step" data-step="0">
+      <h2 class="serif">Hey. Da wohnt jetzt jemand in deinem iPhone.</h2>
+      <p class="muted">Wie heißt du?</p>
+      <input id="obUserName" type="text" placeholder="Dein Name" autocomplete="off">
+    </div>
+    <div class="ob-step hidden" data-step="1">
+      <h2 class="serif">Und wie soll dein kleines Wesen heißen?</h2>
+      <p class="muted">Es besteht auf einen würdevollen Namen.</p>
+      <input id="obPetName" type="text" placeholder="Mimo" autocomplete="off">
+    </div>
+    <div class="ob-step hidden" data-step="2">
+      <h2 class="serif" id="obPersTitle">Welcher Typ soll Mimo sein?</h2>
+      <div id="obPersList"></div>
+    </div>
+  </div>
+  <div class="ob-nav">
+    <button id="obBack" class="btn-ghost hidden">&#8249;</button>
+    <button id="obNext" class="btn-primary">Weiter</button>
+  </div>
+</div>
+
+<!-- ===== Home ===== -->
+<main id="screen-home" class="screen hidden">
+  <header class="home-header">
+    <div>
+      <h1 id="petNameTitle" class="serif pet-title">Mimo</h1>
+      <div class="chip-row">
+        <span class="chip" id="levelChip">Level 1</span>
+        <span class="chip chip-flame hidden" id="streakChip"></span>
+        <span class="chip chip-dust" id="dustChip"><svg viewBox="0 0 24 24" class="dust-ico"><path d="M12 2.8 l2.5 5.6 6.1 0.6 -4.6 4.1 1.3 6 -5.3-3.1 -5.3 3.1 1.3-6 -4.6-4.1 6.1-0.6 z"/></svg><b id="dustAmount">0</b></span>
+      </div>
+    </div>
+    <div class="xp-ring"><svg viewBox="0 0 44 44"><circle class="ring-bg" cx="22" cy="22" r="18"/><circle id="xpRing" class="ring-fg" cx="22" cy="22" r="18"/></svg><span>XP</span></div>
+  </header>
+
+  <section class="stage">
+    <svg class="scene" viewBox="0 0 480 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <circle class="sc-sun" cx="390" cy="70" r="30"/>
+      <g class="sc-moonstars">
+        <circle class="sc-moon" cx="388" cy="58" r="22"/>
+        <circle class="sc-moon-crater" cx="380" cy="52" r="5"/>
+        <circle class="sc-moon-crater" cx="396" cy="64" r="3.4"/>
+        <g class="sc-stars">
+          <circle cx="60" cy="50" r="2.4"/><circle cx="140" cy="30" r="1.8"/><circle cx="230" cy="62" r="2.2"/>
+          <circle cx="300" cy="26" r="1.7"/><circle cx="90" cy="110" r="1.6"/><circle cx="330" cy="96" r="2"/>
+          <circle cx="440" cy="130" r="1.7"/><circle cx="190" cy="104" r="1.5"/><circle cx="40" cy="160" r="1.8"/>
+        </g>
+      </g>
+      <g class="sc-clouds">
+        <g class="cloud cloud-a"><ellipse cx="0" cy="0" rx="42" ry="16"/><ellipse cx="-26" cy="6" rx="26" ry="12"/><ellipse cx="28" cy="7" rx="24" ry="11"/></g>
+        <g class="cloud cloud-b"><ellipse cx="0" cy="0" rx="34" ry="13"/><ellipse cx="-22" cy="5" rx="20" ry="10"/><ellipse cx="22" cy="6" rx="19" ry="9"/></g>
+      </g>
+      <path class="hill hill-3" d="M0,215 C90,168 180,192 260,181 C350,169 420,186 480,172 L480,300 L0,300 Z"/>
+      <path class="hill hill-2" d="M0,244 C70,214 170,236 250,226 C340,215 410,238 480,222 L480,300 L0,300 Z"/>
+      <g class="sc-bush"><ellipse cx="64" cy="252" rx="26" ry="17"/><ellipse cx="86" cy="258" rx="20" ry="13"/></g>
+      <path class="hill hill-1" d="M0,278 C90,252 200,272 290,264 C380,257 440,272 480,262 L480,300 L0,300 Z"/>
+      <g class="sc-flowers">
+        <g transform="translate(96 282)"><circle r="4.5" class="fl-a"/><circle cx="-9" cy="3" r="3" class="fl-leaf"/></g>
+        <g transform="translate(372 288)"><circle r="4" class="fl-b"/></g>
+        <g transform="translate(416 276)"><circle r="3.4" class="fl-a"/></g>
+        <g transform="translate(52 292)"><circle r="3.2" class="fl-b"/></g>
+      </g>
+    </svg>
+    <div class="aura" id="moodAura"></div>
+    <div class="bubble hidden" id="speechBubble"><span id="speechText"></span><i></i></div>
+    <div id="petMount" class="pet-mount"></div>
+    <div id="awayStage" class="pet-away hidden"><span class="away-icon" id="awayStageIcon">&#129517;</span><p id="awayStageText"></p></div>
+    <div class="wake-hint hidden" id="wakeHint">Tippen zum Aufwecken</div>
+  </section>
+
+  <section class="mood-block">
+    <span class="chip" id="moodChip">Glücklich</span>
+    <p class="mood-text" id="moodText"></p>
+    <p class="muted daily" id="dailyMsg"></p>
+  </section>
+
+  <section class="card rings-card">
+    <div class="stat-ring" data-stat="energie"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
+      <em><svg viewBox="0 0 24 24"><path d="M13 2 L5 14 h5 l-1 8 8-12 h-5 z"/></svg></em><label>Energie</label></div>
+    <div class="stat-ring" data-stat="laune"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
+      <em><svg viewBox="0 0 24 24"><circle cx="8.5" cy="10" r="1.6"/><circle cx="15.5" cy="10" r="1.6"/><path d="M8 14.5 q4 3.4 8 0" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg></em><label>Laune</label></div>
+    <div class="stat-ring" data-stat="saettigung"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
+      <em><svg viewBox="0 0 24 24"><path d="M7 3 v7 M10 3 v7 M8.5 3 v18 M16.5 3 c-2 0-3 2.6-3 6 0 2.4 1 3.4 2 3.8 V21 h2 V3 z"/></svg></em><label>Sättigung</label></div>
+    <div class="stat-ring" data-stat="bond"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
+      <em><svg viewBox="0 0 24 24"><path d="M12 20 C5 14.4 3.4 10.6 5.4 7.6 7 5.2 10.4 5.4 12 8 c1.6-2.6 5-2.8 6.6-0.4 2 3-0.4 6.8-6.6 12.4 z"/></svg></em><label>Bond</label></div>
+  </section>
+
+  <button class="card gift-card" id="giftCard">
+    <span class="gift-box"><svg viewBox="0 0 24 24"><path d="M4 11 h16 v9 a2 2 0 0 1 -2 2 H6 a2 2 0 0 1 -2-2 z M3 7 h18 v4 H3 z M12 7 v15 M12 7 C9 7 7 5.8 7 4.2 7 2.8 8.4 2.2 9.6 3 10.8 3.8 12 7 12 7 z M12 7 c3 0 5-1.2 5-2.8 0-1.4-1.4-2-2.6-1.2 C13.2 3.8 12 7 12 7 z"/></svg></span>
+    <span class="gift-text"><strong>Tagesgeschenk wartet</strong><small id="giftSub">Etwas Glitzerndes für dich</small></span>
+    <span class="gift-arrow">&#8250;</span>
+  </button>
+
+  <section class="card wish-card" id="wishCard">
+    <div class="card-head"><span class="section-label">Tageswunsch</span><span class="chip chip-small" id="wishReward">+30 Staub</span></div>
+    <p class="wish-text" id="wishText"></p>
+    <div class="wish-progress" id="wishProgress"></div>
+  </section>
+
+  <section class="card" id="expedCard">
+    <div class="card-head"><span class="section-label">Expedition</span><span class="chip chip-small hidden" id="expedTimer"></span></div>
+    <div id="expedIdle">
+      <p class="wish-text" id="expedIdleText"></p>
+      <button class="btn-ghost exped-btn" id="expedOpen">Auf Expedition schicken</button>
+    </div>
+    <div id="expedActive" class="hidden">
+      <div class="exped-row"><span class="exped-icon" id="expedIcon"></span>
+        <div class="exped-info"><strong id="expedDest"></strong><small class="muted" id="expedAwayText"></small></div></div>
+      <div class="exped-bar"><div class="exped-fill" id="expedFill"></div></div>
+    </div>
+  </section>
+
+  <section class="card" id="ritualCard">
+    <div class="card-head"><span class="section-label">Momente mit Mimo</span></div>
+    <div class="ritual-grid">
+      <button class="ritual" id="ritualBreath"><span class="ritual-icon">○</span><strong>Eine Minute atmen</strong><small class="muted">Mimo atmet mit</small></button>
+      <button class="ritual" id="ritualGratitude"><span class="ritual-icon">♡</span><strong>Dankbarkeit</strong><small class="muted">Eine Sache reicht</small></button>
+    </div>
+  </section>
+
+  <section class="card" id="questsCard">
+    <div class="card-head"><span class="section-label">Tagesziele</span><span class="chip chip-small" id="questBonusChip">+20 XP Bonus</span></div>
+    <div id="questList"></div>
+  </section>
+
+  <section class="card" id="weeklyCard">
+    <div class="card-head"><span class="section-label">Wochenziele</span><span class="chip chip-small" id="weeklyChip">+100 Staub</span></div>
+    <div id="weeklyList"></div>
+  </section>
+
+  <section class="action-grid">
+    <button class="action" data-action="streicheln"><span class="orb"><svg viewBox="0 0 24 24"><path d="M12 20 C5 14.4 3.4 10.6 5.4 7.6 7 5.2 10.4 5.4 12 8 c1.6-2.6 5-2.8 6.6-0.4 2 3-0.4 6.8-6.6 12.4 z"/></svg></span>Streicheln</button>
+    <button class="action" data-action="feed"><span class="orb"><svg viewBox="0 0 24 24"><path d="M4 11 h16 a8 8 0 0 1 -16 0 z"/><path d="M8 8 q1-2.4 4-2.4 T16 8" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg></span>Füttern</button>
+    <button class="action" data-action="game"><span class="orb"><svg viewBox="0 0 24 24"><path d="M12 2.8 l2.5 5.6 6.1 0.6 -4.6 4.1 1.3 6 -5.3-3.1 -5.3 3.1 1.3-6 -4.6-4.1 6.1-0.6 z"/></svg></span>Spielen</button>
+    <button class="action" data-action="talk"><span class="orb"><svg viewBox="0 0 24 24"><path d="M12 4 c-4.7 0-8.5 3-8.5 6.8 0 2.2 1.3 4.2 3.3 5.4 L6 20.5 l4.1-2 c0.6 0.1 1.2 0.2 1.9 0.2 4.7 0 8.5-3 8.5-6.9 S16.7 4 12 4 z"/></svg></span>Reden</button>
+    <button class="action" data-action="schlafen"><span class="orb"><svg viewBox="0 0 24 24"><path d="M19.5 14.5 A8.5 8.5 0 1 1 9.5 4.5 7 7 0 0 0 19.5 14.5 z"/></svg></span>Schlafen</button>
+    <button class="action action-checkin" id="checkinBtn" data-action="checkin"><span class="orb orb-accent"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 l5 5 L19.5 7.5" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Check-in</button>
+  </section>
+</main>
+
+<!-- ===== Room ===== -->
+<main id="screen-room" class="screen hidden">
+  <h1 class="serif screen-title" id="roomTitle">Mimos Zuhause</h1>
+  <section class="room-scene">
+    <svg class="room-svg" viewBox="0 0 420 380" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <pattern id="wallDots" width="34" height="34" patternUnits="userSpaceOnUse">
+          <circle cx="8" cy="8" r="2.6" class="wp-dot"/><circle cx="25" cy="25" r="2.6" class="wp-dot"/>
+        </pattern>
+        <radialGradient id="lampGlowG" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stop-color="#ffdf9a" stop-opacity="0.75"/><stop offset="1" stop-color="#ffdf9a" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect class="room-wall" x="0" y="0" width="420" height="272"/>
+      <rect x="0" y="0" width="420" height="272" fill="url(#wallDots)"/>
+      <path class="room-floor" d="M0,272 L420,272 L420,380 L0,380 Z"/>
+      <ellipse class="floor-sheen" cx="210" cy="300" rx="200" ry="26"/>
+      <rect class="room-skirt" x="0" y="266" width="420" height="8" rx="4"/>
+
+      <!-- Fenster mit Vorhaengen -->
+      <g class="win" transform="translate(52 46)">
+        <rect x="-7" y="-7" width="118" height="102" rx="16" class="win-frame"/>
+        <rect x="0" y="0" width="104" height="88" rx="10" class="win-sky"/>
+        <circle class="win-sun" cx="76" cy="26" r="13"/>
+        <g class="win-night">
+          <circle class="win-moon" cx="78" cy="24" r="10"/>
+          <g class="win-stars"><circle cx="20" cy="18" r="1.8"/><circle cx="42" cy="40" r="1.5"/><circle cx="60" cy="14" r="1.4"/><circle cx="30" cy="62" r="1.6"/></g>
+        </g>
+        <rect x="48.5" y="0" width="7" height="88" class="win-bar"/>
+        <rect x="0" y="40.5" width="104" height="7" class="win-bar"/>
+        <path class="curtain" d="M-12,-10 C-2,26 -8,60 -14,96 L-24,96 C-20,58 -24,24 -26,-10 Z"/>
+        <path class="curtain" d="M116,-10 C106,26 112,60 118,96 L128,96 C124,58 128,24 130,-10 Z"/>
+        <rect x="-28" y="-14" width="160" height="9" rx="4.5" class="curtain-rod"/>
+      </g>
+
+      <!-- Bilderrahmen -->
+      <g transform="translate(300 64) rotate(-2)">
+        <rect x="-27" y="-32" width="54" height="64" rx="7" class="frame-wood"/>
+        <rect x="-20" y="-25" width="40" height="50" rx="4" class="frame-paper"/>
+        <ellipse cx="0" cy="2" rx="13" ry="12" class="frame-pet"/>
+        <ellipse cx="-8" cy="-9" rx="4" ry="5.4" class="frame-pet"/>
+        <ellipse cx="8" cy="-9" rx="4" ry="5.4" class="frame-pet"/>
+        <circle cx="-4.5" cy="0" r="1.7" class="frame-ink"/><circle cx="4.5" cy="0" r="1.7" class="frame-ink"/>
+        <path d="M-3.5,5 Q0,7.6 3.5,5" fill="none" class="frame-smile"/>
+      </g>
+
+      <!-- Sternenfenster (Level 5) -->
+      <g class="hidden" id="decoStarwin" transform="translate(330 160)">
+        <circle r="42" class="starwin-frame"/>
+        <circle r="34" class="starwin-sky"/>
+        <circle cx="-12" cy="-10" r="2.2" class="starwin-star"/><circle cx="10" cy="-16" r="1.7" class="starwin-star"/>
+        <circle cx="16" cy="6" r="2" class="starwin-star"/><circle cx="-4" cy="12" r="1.6" class="starwin-star"/>
+        <circle cx="-18" cy="8" r="1.4" class="starwin-star"/>
+        <path d="M2,-4 l1.4,3 3.2,0.3 -2.4,2.2 0.7,3.1 -2.9-1.7 -2.9,1.7 0.7-3.1 -2.4-2.2 3.2-0.3 z" class="starwin-star"/>
+      </g>
+
+      <!-- Lampe (Level 4) -->
+      <g class="hidden" id="decoLampe" transform="translate(368 210)">
+        <circle class="lamp-glow" cx="0" cy="-6" r="58" fill="url(#lampGlowG)"/>
+        <path d="M-20,4 L20,4 L12,-24 L-12,-24 Z" class="lamp-shade"/>
+        <rect x="-2.5" y="4" width="5" height="76" class="lamp-pole"/>
+        <ellipse cx="0" cy="82" rx="17" ry="5.5" class="lamp-pole"/>
+        <circle cx="0" cy="-2" r="6" class="lamp-bulb"/>
+      </g>
+
+      <!-- Pflanze (Level 3) -->
+      <g class="hidden" id="decoPflanze" transform="translate(74 246)">
+        <path d="M0,-6 C-4,-30 -20,-38 -26,-52 C-8,-46 -2,-30 0,-18 Z" class="leaf leaf-d"/>
+        <path d="M0,-6 C4,-30 20,-38 26,-52 C8,-46 2,-30 0,-18 Z" class="leaf leaf-d"/>
+        <path d="M0,-4 C-1,-28 -4,-44 0,-60 C4,-44 1,-28 0,-4 Z" class="leaf"/>
+        <path d="M-15,3 L15,3 L11,34 L-11,34 Z" class="pot"/>
+        <rect x="-17" y="0" width="34" height="8" rx="4" class="pot-rim"/>
+      </g>
+
+      <!-- Teppich -->
+      <ellipse cx="210" cy="316" rx="118" ry="34" class="rug-a"/>
+      <ellipse cx="210" cy="316" rx="92" ry="25" class="rug-b"/>
+      <ellipse cx="210" cy="316" rx="64" ry="17" class="rug-c"/>
+
+      <!-- Kissen (Level 2) -->
+      <g class="hidden" id="decoKissen" transform="translate(316 300) rotate(4)">
+        <rect x="-40" y="-19" width="80" height="38" rx="17" class="pillow"/>
+        <rect x="-33" y="-13" width="66" height="26" rx="12" class="pillow-inner"/>
+        <circle r="4" class="pillow-btn"/>
+      </g>
+      <!-- Level-Deko 6/8/10 -->
+      <g class="hidden" id="decoUhr" transform="translate(212 78)">
+        <circle r="19" class="clock-face"/><circle r="19" fill="none" class="clock-rim"/>
+        <line x1="0" y1="0" x2="0" y2="-11" class="clock-hand"/>
+        <line x1="0" y1="0" x2="8" y2="4" class="clock-hand thin"/>
+        <circle r="2.2" class="clock-pin"/>
+      </g>
+      <g class="hidden" id="decoBuecher" transform="translate(126 306)">
+        <rect x="-24" y="-8" width="48" height="9" rx="2.5" class="book b1"/>
+        <rect x="-20" y="-17" width="40" height="9" rx="2.5" class="book b2"/>
+        <rect x="-16" y="-26" width="34" height="9" rx="2.5" class="book b3"/>
+      </g>
+      <g class="hidden" id="decoMobile" transform="translate(216 6)">
+        <line x1="0" y1="0" x2="0" y2="16" class="mobile-string"/>
+        <line x1="-26" y1="16" x2="26" y2="16" class="mobile-bar"/>
+        <line x1="-22" y1="16" x2="-22" y2="34" class="mobile-string"/>
+        <line x1="0" y1="16" x2="0" y2="44" class="mobile-string"/>
+        <line x1="22" y1="16" x2="22" y2="28" class="mobile-string"/>
+        <path d="M-22,34 l2.2,4.8 5.2,0.5 -3.9,3.5 1.1,5.1 -4.6-2.7 -4.6,2.7 1.1-5.1 -3.9-3.5 5.2-0.5 z" class="mobile-star s1"/>
+        <path d="M0,44 l2.2,4.8 5.2,0.5 -3.9,3.5 1.1,5.1 -4.6-2.7 -4.6,2.7 1.1-5.1 -3.9-3.5 5.2-0.5 z" class="mobile-star s2"/>
+        <path d="M22,28 l2.2,4.8 5.2,0.5 -3.9,3.5 1.1,5.1 -4.6-2.7 -4.6,2.7 1.1-5.1 -3.9-3.5 5.2-0.5 z" class="mobile-star s3"/>
+      </g>
+      <g class="hidden" id="decoLichterkette">
+        <path d="M0,14 Q105,34 210,16 Q315,2 420,20" fill="none" class="lk-string"/>
+        <circle cx="52" cy="22" r="4.5" class="lk-bulb"/><circle cx="118" cy="27" r="4.5" class="lk-bulb l2"/>
+        <circle cx="182" cy="20" r="4.5" class="lk-bulb l3"/><circle cx="248" cy="12" r="4.5" class="lk-bulb"/>
+        <circle cx="316" cy="10" r="4.5" class="lk-bulb l2"/><circle cx="382" cy="16" r="4.5" class="lk-bulb l3"/>
+      </g>
+      <!-- Shop-Deko -->
+      <g class="hidden" id="decoGirlande">
+        <path d="M20,30 Q110,64 200,34" fill="none" class="garl-string"/>
+        <path d="M52,41 l7,16 8,-14 z" class="garl-f1"/><path d="M92,50 l7,16 8,-14 z" class="garl-f2"/>
+        <path d="M132,50 l7,16 8,-14 z" class="garl-f3"/><path d="M170,42 l7,16 8,-14 z" class="garl-f1"/>
+      </g>
+      <g class="hidden" id="decoTeleskop" transform="translate(258 250)">
+        <rect x="-6" y="-52" width="46" height="13" rx="6.5" class="tele-tube" transform="rotate(-28 0 -46)"/>
+        <circle cx="34" cy="-64" r="5" class="tele-lens"/>
+        <path d="M0,-40 L-14,26 M0,-40 L14,26 M0,-40 L0,26" class="tele-legs" fill="none"/>
+      </g>
+      <g class="hidden" id="decoRadio" transform="translate(136 292)">
+        <rect x="-26" y="-18" width="52" height="34" rx="8" class="radio-body"/>
+        <circle cx="-11" cy="-1" r="8" class="radio-speaker"/>
+        <circle cx="12" cy="-6" r="3.4" class="radio-knob"/><circle cx="12" cy="5" r="3.4" class="radio-knob"/>
+        <path d="M18,-18 L28,-32" class="radio-antenna" fill="none"/>
+        <g class="radio-notes"><text x="30" y="-30" font-size="12">&#9834;</text><text x="42" y="-42" font-size="10">&#9834;</text></g>
+      </g>
+      <rect class="room-vignette" x="0" y="0" width="420" height="380" rx="0"/>
+    </svg>
+    <div id="roomPetMount" class="room-pet"></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><span class="section-label">Garderobe</span></div>
+    <div class="wardrobe" id="wardrobe"></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><span class="section-label">Einrichtung</span></div>
+    <div id="unlockList"></div>
+  </section>
+  <section class="card" id="shopCard">
+    <div class="card-head"><span class="section-label">Shop</span><span class="chip chip-dust chip-small"><svg viewBox="0 0 24 24" class="dust-ico"><path d="M12 2.8 l2.5 5.6 6.1 0.6 -4.6 4.1 1.3 6 -5.3-3.1 -5.3 3.1 1.3-6 -4.6-4.1 6.1-0.6 z"/></svg><b id="dustAmountShop">0</b></span></div>
+    <div id="shopList"></div>
+  </section>
+</main>
+
+<!-- ===== Diary ===== -->
+<main id="screen-diary" class="screen hidden">
+  <h1 class="serif screen-title" id="diaryTitle">Mimos Tagebuch</h1>
+  <section class="card hidden" id="weekCard">
+    <div class="card-head"><span class="section-label">Deine letzten Tage</span></div>
+    <div class="week-dots" id="weekDots"></div>
+    <p class="muted small" id="weekSummary"></p>
+  </section>
+  <div id="diaryEmpty" class="diary-empty hidden">
+    <div id="diaryPetMount"></div>
+    <p class="muted" id="diaryEmptyText">Noch keine Einträge.</p>
+  </div>
+  <div id="diaryList" class="timeline"></div>
+</main>
+
+<!-- ===== Profile ===== -->
+<main id="screen-profile" class="screen hidden">
+  <section class="profile-hero">
+    <div id="profilePetMount"></div>
+    <h1 class="serif" id="profileName">Mimo</h1>
+    <p class="muted" id="profileSub">wohnt bei dir</p>
+    <div class="chip-row center" id="profileChips"></div>
+  </section>
+  <section class="tiles">
+    <div class="tile"><em>&#9825;</em><strong id="tileBond">0</strong><label>Bond</label></div>
+    <div class="tile"><em>&#10022;</em><strong id="tileXp">0</strong><label>XP gesamt</label></div>
+    <div class="tile"><em>&#9998;</em><strong id="tileDiary">0</strong><label>Einträge</label></div>
+    <div class="tile"><em>&#9733;</em><strong id="tileBest">0</strong><label>Rekord</label></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><span class="section-label">Persönlichkeit</span></div>
+    <div id="persBars"></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><span class="section-label">Macken</span><span class="muted small" id="quirkCount">0/10</span></div>
+    <div id="quirkList"></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><span class="section-label">Fundstücke</span><span class="muted small" id="souvCount">0/20</span></div>
+    <div class="souv-grid" id="souvGrid"></div>
+    <p class="muted small souv-detail hidden" id="souvDetail"></p>
+  </section>
+  <section class="card">
+    <div class="card-head"><span class="section-label">Erfolge</span><span class="muted small" id="achCount">0/9</span></div>
+    <div class="ach-grid" id="achGrid"></div>
+  </section>
+  <button class="btn-danger" id="resetBtn">App zurücksetzen</button>
+</main>
+
+<!-- ===== Dock ===== -->
+<nav id="dock" class="hidden">
+  <span class="dock-pill" id="dockPill"></span>
+  <button data-tab="home" class="active"><em><svg viewBox="0 0 24 24"><path d="M4 11.5 L12 4.5 20 11.5 V20 a1 1 0 0 1 -1 1 H15 v-5.5 h-6 V21 H5 a1 1 0 0 1 -1-1 z"/></svg></em>Home</button>
+  <button data-tab="room"><em><svg viewBox="0 0 24 24"><path d="M5 10 V7 a3 3 0 0 1 3-3 h8 a3 3 0 0 1 3 3 v3 M4 10 a2 2 0 0 1 2 2 v2 h12 v-2 a2 2 0 0 1 4 0 v6 h-2.5 v-2 h-15 v2 H2 v-6 a2 2 0 0 1 2-2 z"/></svg></em>Room</button>
+  <button data-tab="diary"><em><svg viewBox="0 0 24 24"><path d="M5 4 h10 a3 3 0 0 1 3 3 v13 H8 a3 3 0 0 0 -3 3 z M5 4 v16 a3 3 0 0 1 3-3 h10"/></svg></em>Diary</button>
+  <button data-tab="profile"><em><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20 c1.4-4 4-6 7.5-6 s6.1 2 7.5 6 z"/></svg></em>Profil</button>
+</nav>
+
+<!-- ===== Sheets ===== -->
+<div class="sheet-backdrop hidden" id="sheetBackdrop"></div>
+
+<div class="sheet hidden" id="sheet-checkin">
+  <div class="sheet-grip"></div>
+  <h2 class="serif">Wie war dein Tag?</h2>
+  <p class="muted" id="checkinSub"></p>
+  <div class="sheet-options" id="checkinOptions"></div>
+</div>
+
+<div class="sheet hidden" id="sheet-feed">
+  <div class="sheet-grip"></div>
+  <h2 class="serif">Was gibt es heute?</h2>
+  <p class="muted" id="feedSub"></p>
+  <div class="feed-grid" id="feedGrid"></div>
+</div>
+
+<div class="sheet hidden" id="sheet-games">
+  <div class="sheet-grip"></div>
+  <h2 class="serif">Was wollt ihr spielen?</h2>
+  <p class="muted" id="gamesSub"></p>
+  <div class="sheet-options" id="gamesOptions"></div>
+</div>
+
+<div class="sheet sheet-chat hidden" id="sheet-chat">
+  <div class="sheet-grip"></div>
+  <div class="chat-head">
+    <span class="chat-avatar" id="chatAvatar"></span>
+    <div><strong id="chatName">Mimo</strong><small class="muted" id="chatStatus">tippt gleich los</small></div>
+    <button class="chat-close" id="chatClose">&#10005;</button>
+  </div>
+  <div class="chat-scroll" id="chatScroll"></div>
+  <div class="chat-answers" id="chatAnswers"></div>
+</div>
+
+<div class="sheet hidden" id="sheet-exped">
+  <div class="sheet-grip"></div>
+  <h2 class="serif">Wohin soll es gehen?</h2>
+  <p class="muted" id="expedSub"></p>
+  <div class="sheet-options" id="expedOptions"></div>
+  <div class="exped-log" id="expedLog"></div>
+</div>
+
+<div class="sheet hidden" id="sheet-gratitude">
+  <div class="sheet-grip"></div>
+  <h2 class="serif">Das Glas der guten Dinge</h2>
+  <p class="muted" id="gratPrompt"></p>
+  <input id="gratInput" type="text" maxlength="90" placeholder="Heute bin ich dankbar für …" autocomplete="off">
+  <button class="btn-primary grat-save" id="gratSave" disabled>Ins Glas legen</button>
+  <div class="grat-recent hidden" id="gratRecent"></div>
+</div>
+
+<div class="sheet hidden" id="sheet-talk">
+  <div class="sheet-grip"></div>
+  <h2 class="serif">Worüber wollt ihr reden?</h2>
+  <p class="muted" id="talkSub"></p>
+  <div class="sheet-options" id="talkOptions"></div>
+</div>
+
+<!-- ===== Mini-Game ===== -->
+<div id="gameOverlay" class="hidden">
+  <canvas id="gameCanvas"></canvas>
+  <div class="game-hud">
+    <span class="hud-chip">&#9733; <b id="gameScore">0</b></span>
+    <span class="hud-chip"><b id="gameTime">30</b>s</span>
+    <button id="gameClose" class="hud-close">&#10005;</button>
+  </div>
+  <div class="game-panel" id="gameReady">
+    <h2 class="serif">Sterne fangen</h2>
+    <p class="muted" id="gameIntro">Zieh Mimo mit dem Finger hin und her. Goldene Sterne zählen dreifach. 30 Sekunden.</p>
+    <span class="chip hidden" id="gameBestChip"></span>
+    <button class="btn-primary" id="gameStart">Los</button>
+  </div>
+  <div class="game-panel hidden" id="gameFinished">
+    <h2 class="serif big" id="gameFinalScore">0 Sterne</h2>
+    <span class="chip hidden" id="gameNewBest">Neuer Rekord</span>
+    <p class="muted" id="gameBestText"></p>
+    <div class="row">
+      <button class="btn-ghost" id="gameAgain">Nochmal</button>
+      <button class="btn-primary" id="gameDone">Fertig</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Level-Up ===== -->
+<div id="levelupOverlay" class="hidden">
+  <canvas id="confetti"></canvas>
+  <div class="levelup-panel">
+    <h2 class="serif" id="levelupTitle">Level 2</h2>
+    <div id="levelupPetMount"></div>
+    <p id="levelupText"></p>
+    <button class="btn-primary" id="levelupClose">Weiter</button>
+  </div>
+</div>
+
+<!-- ===== Toast ===== -->
+<div id="breathOverlay" class="hidden">
+  <div class="breath-stage">
+    <div class="breath-ring" id="breathRing"><div id="breathPetMount"></div></div>
+    <h2 class="serif" id="breathPhase">Bereit?</h2>
+    <p class="muted" id="breathCount"></p>
+    <button class="btn-ghost" id="breathSkip">Beenden</button>
+  </div>
+</div>
+
+<div id="returnOverlay" class="hidden">
+  <canvas id="returnConfetti"></canvas>
+  <div class="return-panel">
+    <h2 class="serif">Wieder da!</h2>
+    <div id="returnPetMount"></div>
+    <p id="returnStory"></p>
+    <div class="return-loot" id="returnLoot"></div>
+    <button class="btn-primary" id="returnClose">Willkommen zurück</button>
+  </div>
+</div>
+
+<div id="giftOverlay" class="hidden">
+  <canvas id="giftConfetti"></canvas>
+  <div class="gift-panel">
+    <div class="gift-stage" id="giftStage">
+      <button class="gift-big" id="giftBig"><svg viewBox="0 0 24 24"><path d="M4 11 h16 v9 a2 2 0 0 1 -2 2 H6 a2 2 0 0 1 -2-2 z M3 7 h18 v4 H3 z M12 7 v15 M12 7 C9 7 7 5.8 7 4.2 7 2.8 8.4 2.2 9.6 3 10.8 3.8 12 7 12 7 z M12 7 c3 0 5-1.2 5-2.8 0-1.4-1.4-2-2.6-1.2 C13.2 3.8 12 7 12 7 z"/></svg></button>
+      <p class="muted" id="giftHint">Tippen zum Öffnen</p>
+    </div>
+    <div class="gift-reveal hidden" id="giftReveal">
+      <span class="chip" id="giftRarity"></span>
+      <h2 class="serif" id="giftAmount">+0</h2>
+      <p class="muted small">Sternenstaub</p>
+      <p id="giftFlavor"></p>
+      <button class="btn-primary" id="giftClose">Einsammeln</button>
+    </div>
+  </div>
+</div>
+
+<div id="awayOverlay" class="hidden">
+  <div class="away-panel">
+    <h2 class="serif">Während du weg warst</h2>
+    <div id="awayPetMount"></div>
+    <p id="awayText"></p>
+    <span class="chip chip-dust away-dust"><svg viewBox="0 0 24 24" class="dust-ico"><path d="M12 2.8 l2.5 5.6 6.1 0.6 -4.6 4.1 1.3 6 -5.3-3.1 -5.3 3.1 1.3-6 -4.6-4.1 6.1-0.6 z"/></svg><b id="awayDust">+0</b></span>
+    <button class="btn-primary" id="awayClose">Einsammeln</button>
+  </div>
+</div>
+
+<div id="toast" class="hidden"><span class="toast-icon" id="toastIcon">&#10022;</span><div><strong id="toastTitle"></strong><p id="toastDetail"></p></div></div>
+
+<script src="data.js?v=6"></script>
+<script src="app.js?v=6"></script>
+</body>
+</html>
